@@ -30,6 +30,16 @@ Equipo: **Diego** y **Scar**.
 
 ## Qué hace
 
+La app tiene **tres secciones** (pestañas):
+
+| Sección | Qué hace | Carpetas de código |
+|---|---|---|
+| **Monitor** | Nombre técnico del módulo que **capta** la actividad (uso de apps en Android) y la **transforma** en datos comprensibles: tiempo por app, estimación con fuente o "pendiente", progreso. | `features/usage`, `features/sync`, `features/progress` |
+| **Reducir sin gastar** | Cambios cotidianos que **no cuestan dinero**, filtrados por esfuerzo y preferencias. “Esto sí va conmigo” / “Ver otra opción”. | `features/recommendations`, `features/preferences` |
+| **Eventos sostenibles** | Carnes asadas y fiestas: lista de recomendaciones y productos sustentables del catálogo curado, con enlaces a Walmart y H‑E‑B. | `features/events` |
+
+Detalle de funciones:
+
 | Función | Descripción | Alcance para la demo |
 |---|---|---|
 | **Actividad digital automática** | Con autorización, lee el tiempo de uso por aplicación en Android (`UsageStatsManager`). Sin captura manual. Se consulta al abrir o actualizar la app. | Indispensable |
@@ -224,7 +234,18 @@ Lúdica y cercana, con **identidad propia** (inspirada en apps de aprendizaje ga
 
 - **Mascota:** un oso negro amigable, especie presente en la Sierra Madre Oriental de Nuevo León.
 - **Tipografía:** [Nunito](https://fonts.google.com/specimen/Nunito) (SIL Open Font License).
-- **Colores:** verde `#1FAF5A` (relieve `#168A46`), amarillo celebración `#FFC83D`, azul información `#3BA7F5`, fondo `#F7FBF5`, texto `#1E2A22`.
+- **Colores: verdes oscuros y claros** (definidos en `mobile/src/theme/colors.ts`):
+
+  | Token | Color | Uso |
+  |---|---|---|
+  | `forest` | `#0F3D2E` | Títulos, cabeceras, barra de pestañas |
+  | `pine` | `#1B5E3F` | Relieve y estado presionado de botones |
+  | `leaf` | `#2E9E5B` | Botones y acciones principales |
+  | `sprout` | `#A8E6B8` | Chips seleccionados, barras de gráficas |
+  | `mint` | `#DDF3E4` | Tarjetas suaves |
+  | `mist` | `#F1FAF3` | Fondo general |
+  | `celebrate` | `#F2C94C` | Solo logros y celebraciones |
+  | `pending` | `#7A8F82` | “Estimación pendiente” (nunca rojo) |
 - **Componentes:** botones grandes con relieve que se hunden al pulsar, tarjetas suaves, mensajes breves.
 - **Lenguaje:** “¿Qué se arma?”, “Un paso para hoy”, “Esto sí va conmigo”. Se adapta el tono sin infantilizar a los adultos.
 
@@ -235,8 +256,8 @@ Leyenda: ✅ probado · 🔧 en desarrollo · 📋 planeado · 🔍 en exploraci
 | Componente | Estado |
 |---|---|
 | Entorno Android (JDK 17, SDK 36, emulador API 35 con aceleración) | ✅ probado |
-| App Expo base (Expo SDK 58, RN 0.88) | 🔧 creada, sin compilar |
-| Lectura de uso con `expo-android-usagestats` | 🔧 instalado, **sin compilar ni validar** |
+| App Expo base (Expo SDK 58, RN 0.88) | ✅ compila e instala en el emulador |
+| Lectura de uso (Monitor) con `expo-android-usagestats` | ✅ probado en emulador Android 15: permiso, lectura real, aumento tras usar otra app, revocación. Pendiente: teléfono real |
 | Supabase: auth, tablas, RLS | 📋 |
 | Edge Function `sync` | 📋 |
 | Catálogo de recomendaciones y productos | 📋 |
