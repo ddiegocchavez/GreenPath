@@ -1,6 +1,6 @@
 /** GreenPath MVP: evidence-labelled food carbon comparison + local event history. */
 import { useEffect, useMemo, useState } from 'react';
-import { Alert, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
+import { Alert, Image, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 import Card from '../components/ui/Card';
 import Screen from '../components/ui/Screen';
 import { colors } from '../theme';
@@ -60,7 +60,15 @@ export default function EventsScreen({ onBack }: { onBack?: () => void } = {}) {
     setLedger(event.foodLedger ?? []);
     Alert.alert('Evento seleccionado', 'Ahora puedes registrar o editar varios alimentos en la sección de seguimiento.');
   };
-  return <Screen title="Mis eventos" subtitle="Carne asada: compara opciones y evita desperdicio" onBack={onBack} backLabel="Volver a Reducir">
+  return <Screen title="Organiza tu carne asada" subtitle="Disfruta más, desperdicia menos." onBack={onBack} backLabel="Volver a Reducir">
+    <Image source={require('../../assets/carne-asada.png')} style={styles.heroImage} resizeMode="cover" />
+    <View style={styles.eventSummary}>
+      <View style={styles.summaryHead}><Text style={styles.summaryTitle}>Tu evento</Text><Text style={styles.summaryStatus}>En planificación</Text></View>
+      <View style={styles.summaryRow}>
+        <View><Text style={styles.summaryLabel}>Invitados</Text><Text style={styles.summaryValue}>{guests} personas</Text></View>
+        <View><Text style={styles.summaryLabel}>Presupuesto</Text><Text style={styles.summaryValue}>${Number(budgetText || 0).toLocaleString('es-MX')} MXN</Text></View>
+      </View>
+    </View>
     <Card tone="mint" title="🌱 Planea con datos trazables"><Text style={styles.body}>Compara la huella de los ingredientes del menú con factores globales publicados. Los costos y porciones son ejemplos; no son cotizaciones ni emisiones verificadas evitadas.</Text></Card>
     <Card title="1. Invitados y presupuesto">
       <Text style={styles.label}>Invitados</Text><View style={styles.row}>{choice('−', () => { setGuests(n => Math.max(2,n-1)); setLastId(null); })}<Text style={styles.number}>{guests}</Text>{choice('+', () => { setGuests(n => Math.min(30,n+1)); setLastId(null); })}</View>
@@ -103,5 +111,13 @@ export default function EventsScreen({ onBack }: { onBack?: () => void } = {}) {
   </Screen>;
 }
 const styles=StyleSheet.create({
+  heroImage:{width:'100%',height:200,borderRadius:18,marginBottom:14},
+  eventSummary:{backgroundColor:'#FFFFFF',borderWidth:1,borderColor:'#D3E3D7',borderRadius:16,padding:14,marginBottom:16},
+  summaryHead:{flexDirection:'row',justifyContent:'space-between',alignItems:'center'},
+  summaryTitle:{fontSize:16,fontWeight:'700',color:colors.forest},
+  summaryStatus:{color:colors.pine,backgroundColor:colors.mint,paddingHorizontal:9,paddingVertical:4,borderRadius:999,fontWeight:'700',fontSize:12,overflow:'hidden'},
+  summaryLabel:{fontSize:13,color:colors.textMuted,marginBottom:4},
+  summaryRow:{borderTopWidth:1,borderTopColor:'#DCE9DF',marginTop:12,paddingTop:12,flexDirection:'row',justifyContent:'space-between'},
+  summaryValue:{fontSize:16,color:colors.text,fontWeight:'700'},
   body:{fontSize:14,color:colors.text,lineHeight:21,marginTop:5},label:{fontSize:15,fontWeight:'700',color:colors.forest,marginTop:10,marginBottom:7},small:{fontSize:12,color:colors.text,opacity:0.75,lineHeight:18,marginTop:8},big:{fontSize:28,fontWeight:'800',color:colors.forest},number:{fontSize:22,fontWeight:'800',color:colors.forest,minWidth:35,textAlign:'center'},row:{flexDirection:'row',alignItems:'center',gap:12},wrap:{flexDirection:'row',flexWrap:'wrap',gap:8,marginTop:8},choice:{borderWidth:1,borderColor:'#D2E2D5',borderRadius:12,backgroundColor:'#FFFFFF',paddingVertical:11,paddingHorizontal:12},selected:{backgroundColor:'#E0F1E2',borderColor:'#43895D'},choiceText:{color:colors.text,fontSize:14},activeText:{color:colors.forest,fontWeight:'700'},input:{borderColor:'#C9DACD',borderWidth:1,borderRadius:10,padding:12,color:colors.forest,backgroundColor:'#FFFFFF'},rule:{borderTopColor:'#D4E4D7',borderTopWidth:1,marginTop:14,marginBottom:9},save:{backgroundColor:colors.forest,borderRadius:12,padding:16,marginBottom:12},saveText:{color:'#FFFFFF',fontWeight:'700',textAlign:'center'}
 });

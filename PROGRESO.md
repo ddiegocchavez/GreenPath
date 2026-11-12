@@ -32,6 +32,16 @@ Cambios recibidos (carpeta `coolproject-main`), revisados e integrados. Solo 19 
 - Arreglo propio: la barra "← Volver a Reducir" se encimaba con el reloj del teléfono. Ahora `Screen` acepta `onBack`/`backLabel` y el botón vive dentro del área segura.
 - ⚠️ Precios y porciones de eventos son de demostración. Los eventos y la despensa no se sincronizan con Supabase.
 
+## UI actualizada desde ZIP (`GreenPath_v2_UI_actualizada.zip`) · 2026-11-12
+
+- **Reducir** rediseñado según mockup: "Reduce tu huella 🌱", 4 accesos rápidos (Alimentación, Consumo digital, Mi despensa, Mis eventos), foto de evento, tarjeta "Carne asada · Personalizable" y consejo.
+- **Mis eventos**: título "Organiza tu carne asada", foto principal y tarjeta "Tu evento · En planificación" con invitados y presupuesto.
+- Las 2 imágenes del ZIP eran **capturas completas del mockup** (con textos y botones), no fotos. Se **recortó solo la foto** para `mobile/assets/event-table.png` y `carne-asada.png`; los mockups completos quedaron en `docs/producto/mockups/` como referencia.
+- **No se tomaron** del ZIP: `PROGRESO.md`, `README.md` (eran versiones anteriores y borraban la documentación v2), `Screen.tsx` y `FoodScreen.tsx` (deshacían el arreglo del botón Volver).
+- Corrección: el acceso "Consumo digital" abría Mi alimentación; ahora navega a **Mi impacto**.
+- ✅ Verificado en emulador: Reducir, Mis eventos, Volver y Consumo digital. `tsc` sin errores.
+- ⚠️ **Origen y licencia de las fotos sin confirmar**: revisar antes de hacer público el repo.
+
 ## Recompensas ✅ (emulador + servidor)
 
 - 4.ª pestaña **Recompensas**: barra de puntos por nivel (Semilla 0 · Brote 250 · Retoño 750 · Árbol 1500 · Bosque 3000), comparación y botón "Reclamar".
