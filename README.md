@@ -246,12 +246,44 @@ Leyenda: ✅ probado · 🔧 en desarrollo · 📋 planeado · 🔍 en exploraci
 
 ## Estructura del repositorio
 
+Cada carpeta tiene un `README.md` que explica qué contiene. El avance día a día está en [`PROGRESO.md`](PROGRESO.md).
+
 ```
 greenpath/
-├── mobile/      App Android (Expo + React Native + TypeScript)
-├── supabase/    Migraciones, políticas RLS y Edge Functions
-├── web/         Perfil web (Next.js)
-└── docs/        Metodología ambiental, fuentes y catálogo
+├── README.md                 Este documento
+├── PROGRESO.md               Bitácora: decisiones, pruebas, pendientes, siguiente paso
+├── shared/
+│   └── contrato/             Contrato de sincronización (esquema JSON v1)
+├── mobile/                   App Android (Expo + React Native + TypeScript)
+│   ├── assets/               fonts/ · mascot/
+│   └── src/
+│       ├── screens/          Una pantalla por archivo
+│       ├── navigation/       Flujo entre pantallas
+│       ├── features/         Lógica por función
+│       │   ├── auth/             Cuenta y sesión
+│       │   ├── usage/            Permiso y lectura de uso de apps
+│       │   ├── sync/             Envío al servidor y pendientes
+│       │   ├── preferences/      Presupuesto, esfuerzo, tono
+│       │   ├── recommendations/  Catálogo filtrado y elecciones
+│       │   ├── events/           Carne asada, fiesta, productos
+│       │   ├── progress/         Elegidas, realizadas, puntos, estimación
+│       │   └── photos/           Ampliación: foto + categoría
+│       ├── components/       ui/ · charts/ · mascot/
+│       ├── lib/              Supabase, SQLite, fechas
+│       ├── theme/            Colores y tipografía
+│       └── types/            Tipos y contrato
+├── supabase/
+│   ├── migrations/           Esquema, RLS y funciones SQL
+│   ├── functions/sync/       Edge Function de sincronización
+│   ├── seed/                 Catálogo y datos demo marcados
+│   └── tests/                Pruebas de RLS e idempotencia
+├── web/                      Perfil web (Next.js, Vercel)
+└── docs/
+    ├── arquitectura/         Contratos y decisiones técnicas
+    ├── metodologia/          Factores, fuentes, incertidumbre
+    ├── catalogo/             Criterios de recomendaciones y productos
+    ├── producto/             Pantallas, lenguaje, identidad visual
+    └── pitch/                Presentación
 ```
 
 ## Cómo ejecutarlo
