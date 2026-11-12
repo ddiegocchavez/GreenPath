@@ -1,0 +1,21 @@
+import assert from 'node:assert/strict';
+import fs from 'node:fs';
+import { pathToFileURL, fileURLToPath } from 'node:url';
+import path from 'node:path';
+const sourcePath = fileURLToPath(new URL('../src/features/foodLedger.ts', import.meta.url));
+const carbonPath = pathToFileURL(path.join(path.dirname(sourcePath), 'carbon.ts')).href;
+const source = fs.readFileSync(sourcePath, 'utf8').replaceAll("from './carbon'", `from '${carbonPath}'`);
+const temp = path.join(path.dirname(sourcePath), 'foodLedger.testcopy.ts');
+fs.writeFileSync(temp, source);
+let calculateLedger;
+try { ({calculateLedger} = await import(pathToFileURL(temp).href)); } finally { fs.unlinkSync(temp); }
+const row={food:'chicken',purchasedGrams:1000,consumedGrams:600,savedGrams:300,discardedGrams:100};
+const r=calculateLedger([row]);
+assert.equal(r.purchasedGrams,1000);assert.equal(r.savedGrams,300);assert.equal(r.discardedGrams,100);assert.equal(r.unaccountedGrams,0);
+assert.ok(Math.abs(r.discardedProductionKgCO2e-0.987)<1e-9);
+assert.equal(calculateLedger([]).discardedProductionKgCO2e,0);
+assert.throws(()=>calculateLedger([{...row,discardedGrams:200}]),/supera/);
+assert.throws(()=>calculateLedger([{...row,purchasedGrams:-1}]),/positivas/);
+assert.throws(()=>calculateLedger([row,row]),/duplicado/);
+assert.equal(calculateLedger([{...row,consumedGrams:400}]).unaccountedGrams,200);
+console.log('7 pruebas de seguimiento alimentario: OK');

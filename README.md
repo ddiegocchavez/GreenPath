@@ -30,14 +30,22 @@ Equipo: **Diego** y **Scar**.
 
 ## Qué hace
 
-La app tiene **cuatro secciones** (pestañas):
+La app tiene **tres pestañas** (MVP v2):
 
-| Sección | Qué hace | Carpetas de código |
+| Pestaña | Qué hace | Código |
 |---|---|---|
-| **Monitor** | Nombre técnico del módulo que **capta** la actividad (uso de apps en Android) y la **transforma** en datos comprensibles: tiempo por app, estimación con fuente o "pendiente", progreso. | `features/usage`, `features/sync`, `features/progress` |
-| **Reducir sin gastar** | Cambios cotidianos que **no cuestan dinero**, filtrados por esfuerzo y preferencias. “Esto sí va conmigo” / “Ver otra opción”. | `features/recommendations`, `features/preferences` |
-| **Eventos sostenibles** | Carnes asadas y fiestas: lista de recomendaciones y productos sustentables del catálogo curado, con enlaces a Walmart y H‑E‑B. | `features/events` |
-| **Recompensas** | Barra de puntos por nivel. Puntos por % de reducción del **tiempo de uso promedio por día** (últimos 7 días vs. 7 anteriores), calculados en el servidor. No es CO₂. Patrocinadores: próximamente. | `features/rewards` |
+| **📊 Mi impacto** | El **Monitor**: capta el uso de apps en Android y lo transforma en datos comprensibles (tiempo por app, guardado en Supabase). Huella digital: "pendiente" (no se deduce CO₂ de minutos). Incluye una **calculadora manual de electricidad** (kWh × factor que aporta el usuario con fuente). | `screens/MonitorScreen`, `features/usage`, `features/sync`, `features/carbon` |
+| **🌱 Reducir** | Puerta a: **🍎 Mi alimentación** (despensa local de 12 ingredientes y 6 recetas para aprovechar lo que tienes) y **🎉 Mis eventos: carne asada** (compara 3 menús con CO₂e estimado por factores publicados, presupuesto, y seguimiento de comprado / consumido / guardado / desechado). También muestra el catálogo de recomendaciones. | `screens/ReduceScreen`, `screens/FoodScreen`, `screens/EventsScreen`, `features/food`, `features/carbon`, `features/foodLedger`, `features/eventStorage` |
+| **🏆 Mi progreso** | Barra de puntos por nivel. Puntos por % de reducción del **tiempo de uso promedio por día** (últimos 7 días vs. 7 anteriores), calculados en el servidor. **No es reducción de CO₂.** Patrocinadores: próximamente. | `screens/RewardsScreen`, `features/rewards` |
+
+Metodología de carbono (factores, alcance, niveles de evidencia): [`docs/CARBON_METHODOLOGY.md`](docs/CARBON_METHODOLOGY.md).
+
+| Nivel de evidencia | En la app |
+|---|---|
+| **Medido** | Tiempo de apps (Android); invitados y gramos autodeclarados |
+| **Estimado** | CO₂e de alimentos con factores globales Poore & Nemecek (2018) vía Our World in Data; escenario eléctrico manual |
+| **Potencial** | Diferencia entre menús hipotéticos (no es reducción conseguida) |
+| **Reducción conseguida** | No disponible en el MVP |
 
 Detalle de funciones:
 

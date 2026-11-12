@@ -3,7 +3,7 @@
 Bitácora para que cualquier colaborador pueda continuar o revisar el trabajo. Se actualiza después de cada avance importante.
 
 **Entrega:** 13 de noviembre de 2026, 9:00 a. m. (America/Mexico_City)
-**Última actualización:** 2026-11-12 ~16:15
+**Última actualización:** 2026-11-12 ~17:20
 **Repo:** https://github.com/ddiegocchavez/greenpath (privado) · **Ruta local:** `C:\greenpath`
 
 Leyenda: ✅ probado · 🔧 en curso · 📋 pendiente · ⚠️ problema
@@ -12,10 +12,23 @@ Leyenda: ✅ probado · 🔧 en curso · 📋 pendiente · ⚠️ problema
 
 ## Siguiente paso
 
-1. Catálogo y metodología (seed): recomendaciones "sin gastar", eventos y productos.
-2. Pantallas de recomendaciones ("Esto sí va conmigo" / "Ver otra opción") y eventos.
+1. **Probar MVP v2 en el emulador** (Mi alimentación, Mis eventos, calculadora eléctrica): no se ha visto en Android todavía.
+2. Catálogo de recomendaciones en Supabase (Reducir sigue mostrando "Catálogo en preparación").
 3. Perfil web (Next.js) y despliegue.
 4. Patrocinadores de recompensas (más adelante, no prioritario).
+
+## MVP v2 integrado desde ZIP (`GreenPath_v2_descarga_nueva.zip`) · 2026-11-12
+
+Cambios recibidos (carpeta `coolproject-main`), revisados e integrados. Solo 19 archivos difieren; el resto era idéntico al repo.
+
+- **Navegación a 3 pestañas:** 📊 Mi impacto (Monitor) · 🌱 Reducir · 🏆 Mi progreso (Recompensas). Eventos y Alimentación quedan dentro de Reducir.
+- **Motor de carbono** `features/carbon.ts`: factores Poore & Nemecek (2018) vía Our World in Data (res 99.48, pollo 9.87, legumbres 1.79, tomate 2.09, maíz 1.70, arroz 4.45 kg CO₂e/kg — valores verificados contra la fuente publicada). Globales, no México.
+- **Mis eventos: carne asada** (`EventsScreen`): 3 menús, invitados, presupuesto, CO₂e estimado vs. menú tradicional de referencia (comparación **potencial**, no reducción), seguimiento comprado / consumido / guardado / desechado (`foodLedger.ts`), historial local (`eventStorage.ts`, AsyncStorage, no Supabase).
+- **Mi alimentación** (`FoodScreen`, `food.ts`): despensa local de 12 ingredientes y 6 recetas deterministas.
+- **Calculadora eléctrica manual** en Mi impacto: kWh × factor del usuario; no se deduce de minutos de uso; no da puntos.
+- Metodología: `docs/CARBON_METHODOLOGY.md`. Notas del autor: `CAMBIOS_GREENPATH_MVP.md`, `AVANCE_GREENPATH_V2.md`, `AVANCE_CARBONO_GREENPATH.md`, `MIS_EVENTOS_MVP.md`.
+- Verificado aquí: `tsc --noEmit` ✅ · `tests/carbon.test.mjs` 8/8 ✅ · `tests/foodLedger.test.mjs` 7/7 ✅.
+- ⚠️ No verificado aún en Android. Precios y porciones de eventos son de demostración. Los eventos y la despensa no se sincronizan con Supabase.
 
 ## Recompensas ✅ (emulador + servidor)
 

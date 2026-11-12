@@ -3,10 +3,11 @@
  * Separa siempre: actividad medida · emisiones estimadas (o pendientes) · estado de guardado.
  */
 import { useCallback, useEffect, useState } from 'react';
-import { AppState, Pressable, StyleSheet, Text, View } from 'react-native';
+import { AppState, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 import Button from '../components/ui/Button';
 import Card from '../components/ui/Card';
 import Screen from '../components/ui/Screen';
+import { estimateElectricityCarbon } from '../features/carbon';
 import { signOut } from '../features/auth/AuthProvider';
 import { syncSnapshot, SyncOutcome } from '../features/sync/syncUsage';
 import { openPermissionSettings, readTodayUsage, UsageResult } from '../features/usage/usageReader';
@@ -20,6 +21,8 @@ export default function MonitorScreen() {
   const [usage, setUsage] = useState<UsageResult | null>(null);
   const [sync, setSync] = useState<SyncOutcome | null>(null);
   const [busy, setBusy] = useState(false);
+  const [kwhText, setKwhText] = useState('');
+  const [factorText, setFactorText] = useState('');
 
   // Consulta y sincroniza al abrir, al volver a la app y al actualizar.
   const refresh = useCallback(async () => {
@@ -41,7 +44,10 @@ export default function MonitorScreen() {
   const max = items[0]?.foregroundMs ?? 1;
 
   return (
-    <Screen title="Monitor" subtitle="Tu actividad digital de hoy" onRefresh={refresh} refreshing={busy}>
+    <Screen title="Mi impacto" subtitle="Alimentación y actividad digital: empieza por lo medible" onRefresh={refresh} refreshing={busy}>
+      <Card tone="mint" title="🍎 Alimentación">
+        <Text style={[text.body, styles.dark]}>Tu despensa y las recetas están disponibles en Reducir. El CO₂e alimentario requiere cantidades, una referencia comparable y factores documentados; no mostramos cifras inventadas.</Text>
+      </Card>
       {usage?.status === 'no_permission' && (
         <Card tone="mint" title="Un paso para empezar">
           <Text style={[text.body, styles.dark]}>
@@ -109,6 +115,16 @@ export default function MonitorScreen() {
         </>
       )}
 
+      <Card title="Escenario de electricidad · opcional">
+        <Text style={[text.body, styles.dark]}>Si conoces los kWh consumidos y el factor de emisión eléctrico aplicable, calcula solo esa parte. NO se deduce del tiempo de uso de las apps ni representa su huella completa.</Text>
+        <Text style={[text.label, styles.dark, {marginTop: 10}]}>Electricidad consumida (kWh)</Text>
+        <TextInput accessibilityLabel="Electricidad en kWh" keyboardType="decimal-pad" value={kwhText} onChangeText={setKwhText} placeholder="Ej. 0.5" style={styles.input}/>
+        <Text style={[text.label, styles.dark, {marginTop: 10}]}>Factor (kg CO₂e/kWh)</Text>
+        <TextInput accessibilityLabel="Factor eléctrico" keyboardType="decimal-pad" value={factorText} onChangeText={setFactorText} placeholder="Ingresa un factor con fuente" style={styles.input}/>
+        {kwhText.trim() !== '' && factorText.trim() !== '' && Number.isFinite(Number(kwhText.replace(',','.'))) && Number.isFinite(Number(factorText.replace(',','.'))) && Number(kwhText.replace(',','.')) >= 0 && Number(factorText.replace(',','.')) >= 0 && <Text style={[text.body, styles.dark]}>Resultado del escenario: {estimateElectricityCarbon(Number(kwhText.replace(',','.')), Number(factorText.replace(',','.'))).toFixed(3)} kg CO₂e.</Text>}
+        <Text style={[text.small, styles.dark]}>Debes documentar año, región y fuente del factor antes de usar el resultado en un reporte. No se generan puntos con este escenario.</Text>
+      </Card>
+
       <Pressable onPress={signOut}><Text style={styles.signOut}>Cerrar sesión</Text></Pressable>
     </Screen>
   );
@@ -125,5 +141,6 @@ const styles = StyleSheet.create({
   track: { height: 10, borderRadius: radius.pill, backgroundColor: colors.mint, overflow: 'hidden' },
   bar: { height: 10, borderRadius: radius.pill, backgroundColor: colors.leaf },
   syncNote: { color: colors.textMuted, textAlign: 'center', marginVertical: space.md },
+  input: { borderWidth: 1, borderColor: '#C9DACD', borderRadius: 10, padding: 12, color: colors.text, marginTop: 6 },
   signOut: { textAlign: 'center', fontFamily: fonts.bold, color: colors.textMuted, padding: space.md },
 });

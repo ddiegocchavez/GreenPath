@@ -1,6 +1,8 @@
 /** Reducir sin gastar: recomendaciones del catálogo curado que no cuestan dinero. */
 import { useCallback, useEffect, useState } from 'react';
-import { Text } from 'react-native';
+import { Text, Pressable, View } from 'react-native';
+import FoodScreen from './FoodScreen';
+import EventsScreen from './EventsScreen';
 import Card from '../components/ui/Card';
 import Screen from '../components/ui/Screen';
 import { supabase } from '../lib/supabase';
@@ -9,6 +11,8 @@ import { colors, text } from '../theme';
 type Rec = { id: string; title: string; what_to_do: string; why: string; effort: string };
 
 export default function ReduceScreen() {
+  const [showFood, setShowFood] = useState(false);
+  const [showEvents, setShowEvents] = useState(false);
   const [recs, setRecs] = useState<Rec[] | null>(null);
   const [busy, setBusy] = useState(false);
 
@@ -25,8 +29,26 @@ export default function ReduceScreen() {
 
   useEffect(() => { load(); }, [load]);
 
+  if (showEvents) return <View style={{ flex: 1 }}><Pressable onPress={() => setShowEvents(false)} style={{ backgroundColor: colors.mint, padding: 14 }}><Text style={{ color: colors.forest }}>← Volver a Reducir</Text></Pressable><EventsScreen /></View>;
+  if (showFood) return <View style={{ flex: 1 }}><Pressable onPress={() => setShowFood(false)} style={{ backgroundColor: colors.mint, padding: 14 }}><Text style={{ color: colors.forest }}>← Volver a Reducir</Text></Pressable><FoodScreen /></View>;
+
   return (
-    <Screen title="Reducir sin gastar" subtitle="Un paso para hoy, sin gastar un peso" onRefresh={load} refreshing={busy}>
+    <Screen title="Reducir" subtitle="Cambios posibles según tus hábitos y presupuesto" onRefresh={load} refreshing={busy}>
+      <Card tone="mint" title="🍎 Alimentación: aprovecha lo que tienes">
+        <Text style={[text.body, { color: colors.text }]}>Registra los ingredientes de tu casa y descubre recetas para evitar compras innecesarias y posible desperdicio.</Text>
+        <Pressable onPress={() => setShowFood(true)} style={{ marginTop: 12, backgroundColor: colors.forest, padding: 12, borderRadius: 12 }}>
+          <Text style={{ color: colors.onDark, textAlign: 'center' }}>Abrir mi alimentación →</Text>
+        </Pressable>
+      </Card>
+      <Card tone="mint" title="🎉 Mis eventos: carne asada">
+        <Text style={[text.body, { color: colors.text }]}>Planea invitados, presupuesto y cantidades; compara menus y registra sobrantes para reducir desperdicio.</Text>
+        <Pressable onPress={() => setShowEvents(true)} style={{ marginTop: 12, backgroundColor: colors.forest, padding: 12, borderRadius: 12 }}>
+          <Text style={{ color: colors.onDark, textAlign: 'center' }}>Planear mi carne asada →</Text>
+        </Pressable>
+      </Card>
+      <Card title="📱 Consumo digital">
+        <Text style={[text.body, { color: colors.text }]}>Consulta tu actividad real en Mi impacto. Reducir minutos no equivale automáticamente a reducir CO₂e.</Text>
+      </Card>
       {recs?.length === 0 && (
         <Card tone="mint" title="Catálogo en preparación">
           <Text style={[text.body, { color: colors.text }]}>

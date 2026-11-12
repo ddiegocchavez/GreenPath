@@ -1,0 +1,11 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import { calculateFoodCarbon, compareMenus, estimateDiscardedFood, estimateElectricityCarbon, menuQuantities } from '../src/features/carbon.ts';
+test('1 kg chicken uses documented factor', () => assert.equal(calculateFoodCarbon({chicken:1}).totalKgCO2e, 9.87));
+test('100 grams beef uses kg units', () => assert.ok(Math.abs(calculateFoodCarbon({beef:0.1}).totalKgCO2e - 9.948) < 1e-10));
+test('menu scales linearly with guests', () => assert.equal(calculateFoodCarbon(menuQuantities('vegetal', 8)).totalKgCO2e, 2*calculateFoodCarbon(menuQuantities('vegetal', 4)).totalKgCO2e));
+test('traditional baseline has zero difference', () => assert.equal(compareMenus('tradicional', 8).differenceKgCO2e, 0));
+test('vegetal demo has lower footprint than traditional', () => assert.ok(compareMenus('vegetal',8).differenceKgCO2e > 0));
+test('discarded grams are converted to kg', () => assert.ok(Math.abs(estimateDiscardedFood('chicken',100)-0.987)<1e-10));
+test('electricity scenario uses kWh times factor', () => assert.equal(estimateElectricityCarbon(2,0.4),0.8));
+test('negative values are rejected', () => assert.throws(()=>estimateDiscardedFood('beef',-1)));

@@ -56,7 +56,10 @@ export default function RewardsScreen() {
   const pct = status?.reduction_pct != null ? Number(status.reduction_pct) : null;
 
   return (
-    <Screen title="Recompensas" subtitle="Tus puntos por reducir tu tiempo de uso" onRefresh={load} refreshing={busy}>
+    <Screen title="Mi progreso" subtitle="Hábitos registrados, puntos y recompensas" onRefresh={load} refreshing={busy}>
+      <Card tone="mint" title="🌱 Progreso de carbono">
+        <Text style={[text.body, { color: colors.text }]}>Reducción de CO₂e: pendiente de medición validada. Los puntos actuales premian cambios de tiempo de pantalla, no reducciones demostradas de emisiones.</Text>
+      </Card>
       {/* Barra de puntos acumulados */}
       <Card tone="forest" title={`Nivel ${lvl.current.name}`}>
         <Text style={styles.points}>{total.toLocaleString('es-MX')} <Text style={styles.pointsUnit}>puntos</Text></Text>
