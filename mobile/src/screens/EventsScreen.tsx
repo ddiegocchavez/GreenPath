@@ -12,7 +12,7 @@ const pantryOptions = ['Tortillas', 'Salsa', 'Limones', 'Servilletas'];
 const pantryCosts: Record<string, number> = { Tortillas: 40, Salsa: 35, Limones: 20, Servilletas: 25 };
 const foods = Object.keys(FOOD_FACTORS) as FoodKey[];
 const fmt = (v: number) => v.toFixed(2);
-export default function EventsScreen() {
+export default function EventsScreen({ onBack }: { onBack?: () => void } = {}) {
   const [guests, setGuests] = useState(8);
   const [budgetText, setBudgetText] = useState('1200');
   const [menu, setMenu] = useState<MenuKey>('equilibrado');
@@ -60,7 +60,7 @@ export default function EventsScreen() {
     setLedger(event.foodLedger ?? []);
     Alert.alert('Evento seleccionado', 'Ahora puedes registrar o editar varios alimentos en la sección de seguimiento.');
   };
-  return <Screen title="Mis eventos" subtitle="Carne asada: compara opciones y evita desperdicio">
+  return <Screen title="Mis eventos" subtitle="Carne asada: compara opciones y evita desperdicio" onBack={onBack} backLabel="Volver a Reducir">
     <Card tone="mint" title="🌱 Planea con datos trazables"><Text style={styles.body}>Compara la huella de los ingredientes del menú con factores globales publicados. Los costos y porciones son ejemplos; no son cotizaciones ni emisiones verificadas evitadas.</Text></Card>
     <Card title="1. Invitados y presupuesto">
       <Text style={styles.label}>Invitados</Text><View style={styles.row}>{choice('−', () => { setGuests(n => Math.max(2,n-1)); setLastId(null); })}<Text style={styles.number}>{guests}</Text>{choice('+', () => { setGuests(n => Math.min(30,n+1)); setLastId(null); })}</View>

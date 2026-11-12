@@ -29,8 +29,8 @@ export default function ReduceScreen() {
 
   useEffect(() => { load(); }, [load]);
 
-  if (showEvents) return <View style={{ flex: 1 }}><Pressable onPress={() => setShowEvents(false)} style={{ backgroundColor: colors.mint, padding: 14 }}><Text style={{ color: colors.forest }}>← Volver a Reducir</Text></Pressable><EventsScreen /></View>;
-  if (showFood) return <View style={{ flex: 1 }}><Pressable onPress={() => setShowFood(false)} style={{ backgroundColor: colors.mint, padding: 14 }}><Text style={{ color: colors.forest }}>← Volver a Reducir</Text></Pressable><FoodScreen /></View>;
+  if (showEvents) return <EventsScreen onBack={() => setShowEvents(false)} />;
+  if (showFood) return <FoodScreen onBack={() => setShowFood(false)} />;
 
   return (
     <Screen title="Reducir" subtitle="Cambios posibles según tus hábitos y presupuesto" onRefresh={load} refreshing={busy}>

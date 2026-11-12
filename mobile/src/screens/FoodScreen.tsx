@@ -6,7 +6,7 @@ import Screen from '../components/ui/Screen';
 import { INGREDIENTS, Ingredient, loadPantry, savePantry, suggestRecipes } from '../features/food';
 import { colors, fonts, space, text } from '../theme';
 
-export default function FoodScreen() {
+export default function FoodScreen({ onBack }: { onBack?: () => void } = {}) {
   const [items, setItems] = useState<Ingredient[]>([]);
   const [loaded, setLoaded] = useState(false);
   useEffect(() => { loadPantry().then(v => { setItems(v); setLoaded(true); }); }, []);
@@ -17,7 +17,7 @@ export default function FoodScreen() {
   };
   const recipes = suggestRecipes(items).slice(0, 4);
   return (
-    <Screen title="Mi alimentación" subtitle="Aprovecha lo que tienes antes de comprar más">
+    <Screen title="Mi alimentación" subtitle="Aprovecha lo que tienes antes de comprar más" onBack={onBack} backLabel="Volver a Reducir">
       <Card tone="forest" title="Tu despensa">
         <Text style={[text.body, { color: colors.onDark }]}>Selecciona los alimentos que ya tienes en casa. No necesitas comprar productos caros para comenzar.</Text>
       </Card>

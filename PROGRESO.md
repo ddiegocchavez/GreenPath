@@ -28,7 +28,9 @@ Cambios recibidos (carpeta `coolproject-main`), revisados e integrados. Solo 19 
 - **Calculadora eléctrica manual** en Mi impacto: kWh × factor del usuario; no se deduce de minutos de uso; no da puntos.
 - Metodología: `docs/CARBON_METHODOLOGY.md`. Notas del autor: `CAMBIOS_GREENPATH_MVP.md`, `AVANCE_GREENPATH_V2.md`, `AVANCE_CARBONO_GREENPATH.md`, `MIS_EVENTOS_MVP.md`.
 - Verificado aquí: `tsc --noEmit` ✅ · `tests/carbon.test.mjs` 8/8 ✅ · `tests/foodLedger.test.mjs` 7/7 ✅.
-- ⚠️ No verificado aún en Android. Precios y porciones de eventos son de demostración. Los eventos y la despensa no se sincronizan con Supabase.
+- ✅ **Verificado en el emulador:** 3 pestañas; Mis eventos calcula bien (equilibrado 8 personas = 81.97 kg CO₂e; tradicional = 145.34; revisado a mano); Mi alimentación guarda ingredientes y sugiere recetas.
+- Arreglo propio: la barra "← Volver a Reducir" se encimaba con el reloj del teléfono. Ahora `Screen` acepta `onBack`/`backLabel` y el botón vive dentro del área segura.
+- ⚠️ Precios y porciones de eventos son de demostración. Los eventos y la despensa no se sincronizan con Supabase.
 
 ## Recompensas ✅ (emulador + servidor)
 
