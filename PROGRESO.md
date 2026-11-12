@@ -13,8 +13,16 @@ Leyenda: ✅ probado · 🔧 en curso · 📋 pendiente · ⚠️ problema
 ## Siguiente paso
 
 1. Navegación con las **3 pestañas**: Monitor · Reducir sin gastar · Eventos sostenibles, con la paleta de verdes (`theme/colors.ts`).
-2. Supabase: tablas, RLS y Edge Function `sync` (contrato v1).
-3. Monitor → enviar el resumen a Supabase y probar que repetir no duplica.
+2. Cuenta en la app (registro / inicio de sesión con Supabase Auth).
+3. Monitor → llamar `sync_usage` con el resumen real.
+4. Catálogo y metodología (seed).
+
+## Supabase ✅
+
+- Proyecto **greenpath** · ref `fmjjcdflnmbytznryefg` · us-east-1 · https://supabase.com/dashboard/project/fmjjcdflnmbytznryefg
+- Contraseña de la base en `.env` (raíz, no versionado). Clave pública en `mobile/.env` (no versionado; plantilla en `mobile/.env.example`).
+- Migración `20261112210859_init_schema.sql` aplicada con `npx supabase db push --remote`.
+- ⚠️ La conexión MCP de Supabase de la sesión apunta a **otro proyecto (jmf-erp)**: no usarla para GreenPath; usar la CLI enlazada.
 
 ## Hito 1 · Lectura real en Android ✅ (emulador)
 
@@ -40,6 +48,8 @@ Leyenda: ✅ probado · 🔧 en curso · 📋 pendiente · ⚠️ problema
 | 11-12 | Repo organizado por capas y funciones; cada carpeta tiene un `README.md` que explica qué contiene. |
 | 11-12 | La app tiene **3 secciones**: **Monitor** (capta y transforma la actividad), **Reducir sin gastar** y **Eventos sostenibles** (lista y productos sustentables). |
 | 11-12 | Paleta de **verdes oscuros y claros** (`forest`, `pine`, `leaf`, `sprout`, `mint`, `mist`); reemplaza a la propuesta anterior con amarillo/azul. |
+| 11-12 | **Ya no hay reparto entre dos personas: todo se hace desde la sesión de Claude** (sujeto a cambios). |
+| 11-12 | Sincronización: la app llama la función SQL `sync_usage` (security invoker + RLS) directamente; la Edge Function queda opcional para cálculos posteriores. Ahorra un despliegue y cumple: usuario desde el JWT, idempotencia, lo antiguo no pisa lo reciente. |
 | 11-12 | El uso se calcula sumando eventos por **activity** desde las 00:00 locales; se excluyen launcher y asistentes del sistema, como Bienestar digital. |
 
 ## Funciones implementadas
@@ -53,7 +63,10 @@ Leyenda: ✅ probado · 🔧 en curso · 📋 pendiente · ⚠️ problema
 | Pantalla temporal `screens/UsageDebugScreen.tsx` | ✅ se reemplazará por la pestaña Monitor |
 | Paleta `theme/colors.ts` | ✅ definida, aún no aplicada en pantallas |
 | Contrato de sincronización v1 | ✅ definido (`shared/contrato/`), sin implementar |
-| Supabase, Edge Function, catálogo, web | 📋 |
+| Esquema Supabase: perfiles, preferencias, dispositivos, `usage_daily`, factores, catálogo, elecciones, puntos | ✅ aplicado |
+| RLS en las 11 tablas + permisos explícitos | ✅ probado |
+| `sync_usage(payload)` idempotente + vista `v_daily_activity` | ✅ probado |
+| Catálogo (seed), metodología, web | 📋 |
 
 ## Pruebas realizadas
 
@@ -68,6 +81,7 @@ Leyenda: ✅ probado · 🔧 en curso · 📋 pendiente · ⚠️ problema
 | Usar otra app y volver → el tiempo sube | ✅ Chrome de 0 a 3 min tras ~100 s de uso; Settings 20 s exactos |
 | Revocar permiso (`appops ... ignore`) → vuelve a pedirlo sin cerrarse | ✅ |
 | Teléfono real | 📋 pendiente (teléfono prestado) |
+| `supabase/tests/sync_e2e.mjs` contra el proyecto real (2 usuarios de prueba, borrados al final) | ✅ 9/9: guarda; repetir no cambia; más reciente reemplaza; más antiguo no sobrescribe; sin duplicados; B no ve a A; B no escribe en el dispositivo de A (403); sin sesión no lee uso (401); catálogo público legible |
 | Comparación contra Bienestar digital | 📋 pendiente en teléfono real |
 
 ## Problemas pendientes
@@ -99,6 +113,10 @@ Leyenda: ✅ probado · 🔧 en curso · 📋 pendiente · ⚠️ problema
 | `mobile/src/features/usage/usageReader.ts` | Lector de uso por eventos, permisos y estados |
 | `mobile/src/screens/UsageDebugScreen.tsx` | Pantalla temporal del Hito 1 |
 | `mobile/src/theme/colors.ts` | Paleta de verdes |
+| `supabase/config.toml`, `supabase/.gitignore` | Generados por `supabase init` |
+| `supabase/migrations/20261112210859_init_schema.sql` | Esquema, RLS, `sync_usage`, vista diaria |
+| `supabase/tests/sync_e2e.mjs` | Prueba de punta a punta de sincronización y RLS |
+| `mobile/.env.example` | Plantilla de variables de la app |
 
 ## Entorno local (máquina de Diego)
 
