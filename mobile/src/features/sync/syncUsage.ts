@@ -3,7 +3,7 @@ import { getDeviceId, getDeviceLabel } from '../../lib/device';
 import { isoWithOffset, localDate, timeZone } from '../../lib/dates';
 import { supabase } from '../../lib/supabase';
 import type { SyncPayloadV1, SyncResultV1 } from '../../types/contrato';
-import type { UsageSnapshot } from '../usage/usageReader';
+import { readPastDays, type UsageSnapshot } from '../usage/usageReader';
 
 export async function buildPayload(snapshot: UsageSnapshot): Promise<SyncPayloadV1> {
   return {
@@ -38,4 +38,18 @@ export async function syncSnapshot(snapshot: UsageSnapshot): Promise<SyncOutcome
   } catch (e) {
     return { status: 'error', message: e instanceof Error ? e.message : String(e) };
   }
+}
+
+/**
+ * Sube los días anteriores que Android conserva (para comparar periodos).
+ * Es idempotente: repetirlo no duplica. Devuelve cuántos días se enviaron.
+ */
+export async function syncPastDays(ownAppId: string, days = 13): Promise<number> {
+  const snaps = await readPastDays(days, ownAppId);
+  let sent = 0;
+  for (const s of snaps) {
+    const r = await syncSnapshot(s);
+    if (r.status === 'synced') sent++;
+  }
+  return sent;
 }

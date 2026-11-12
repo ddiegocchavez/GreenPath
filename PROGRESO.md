@@ -12,10 +12,22 @@ Leyenda: ✅ probado · 🔧 en curso · 📋 pendiente · ⚠️ problema
 
 ## Siguiente paso
 
-1. **Recompensas** (pedido nuevo): puntos según % de reducción, barra de progreso, patrocinadores (tiendas sustentables y otras). Pendiente decidir qué métrica se reduce y cómo se muestran patrocinadores sin acuerdo.
-2. Catálogo y metodología (seed): recomendaciones "sin gastar", eventos y productos.
-3. Pantallas de recomendaciones ("Esto sí va conmigo" / "Ver otra opción") y eventos.
-4. Perfil web (Next.js) y despliegue.
+1. Catálogo y metodología (seed): recomendaciones "sin gastar", eventos y productos.
+2. Pantallas de recomendaciones ("Esto sí va conmigo" / "Ver otra opción") y eventos.
+3. Perfil web (Next.js) y despliegue.
+4. Patrocinadores de recompensas (más adelante, no prioritario).
+
+## Recompensas ✅ (emulador + servidor)
+
+- 4.ª pestaña **Recompensas**: barra de puntos por nivel (Semilla 0 · Brote 250 · Retoño 750 · Árbol 1500 · Bosque 3000), comparación y botón "Reclamar".
+- **Regla `reduccion-actividad-v2-promedio-diario`:** compara el **promedio diario** de tiempo de uso de los últimos 7 días completos vs. los 7 anteriores, por dispositivo. 10 pts por cada 1 % de reducción, desde 5 %, máx. 500. Si sube, 0 (sin castigo). Solo si ambos periodos tienen ≥ 5 días con datos. Una vez por ventana de 7 días.
+- La v1 comparaba totales: con 6 vs 7 días daba 3 % en vez de ~17 %. Corregido a promedio diario (migración `..._rewards_daily_average.sql`).
+- Calculado y otorgado en el servidor: `weekly_reduction` (invoker) y `claim_weekly_points` (definer, recalcula; no confía en el cliente).
+- Es reducción de **actividad**, no de CO₂; la app lo dice. Puntos en `points_ledger`, separados de emisiones.
+- La app sube los días anteriores que Android conserva (`syncPastDays`, idempotente).
+- Historial de **demostración** (`is_demo=true`, etiquetado en la app): `supabase/seed/demo_history.mjs` para la cuenta demo.
+- Migración `20261112221450_rewards_points.sql` quedó **vacía por error** (no cambia nada; no borrar: está en el historial remoto). El contenido está en `..._rewards_points_v1.sql`.
+- Patrocinadores: **pendiente**, decisión de Diego dejarlo para después.
 
 ## Hito 2 · Cuenta + Monitor guardando en Supabase ✅ (emulador)
 
@@ -54,6 +66,7 @@ Leyenda: ✅ probado · 🔧 en curso · 📋 pendiente · ⚠️ problema
 | 11-12 | Repo organizado por capas y funciones; cada carpeta tiene un `README.md` que explica qué contiene. |
 | 11-12 | La app tiene **3 secciones**: **Monitor** (capta y transforma la actividad), **Reducir sin gastar** y **Eventos sostenibles** (lista y productos sustentables). |
 | 11-12 | Paleta de **verdes oscuros y claros** (`forest`, `pine`, `leaf`, `sprout`, `mint`, `mist`); reemplaza a la propuesta anterior con amarillo/azul. |
+| 11-12 | **Recompensas:** puntos por % de reducción de la **actividad medida** (promedio diario, 7 vs 7 días); 4.ª pestaña "Recompensas"; patrocinadores después. |
 | 11-12 | **Ya no hay reparto entre dos personas: todo se hace desde la sesión de Claude** (sujeto a cambios). |
 | 11-12 | Sincronización: la app llama la función SQL `sync_usage` (security invoker + RLS) directamente; la Edge Function queda opcional para cálculos posteriores. Ahorra un despliegue y cumple: usuario desde el JWT, idempotencia, lo antiguo no pisa lo reciente. |
 | 11-12 | El uso se calcula sumando eventos por **activity** desde las 00:00 locales; se excluyen launcher y asistentes del sistema, como Bienestar digital. |
@@ -93,6 +106,8 @@ Leyenda: ✅ probado · 🔧 en curso · 📋 pendiente · ⚠️ problema
 | Usar otra app y volver → el tiempo sube | ✅ Chrome de 0 a 3 min tras ~100 s de uso; Settings 20 s exactos |
 | Revocar permiso (`appops ... ignore`) → vuelve a pedirlo sin cerrarse | ✅ |
 | Teléfono real | 📋 pendiente (teléfono prestado) |
+| `supabase/tests/rewards_e2e.mjs` (usuarios de prueba borrados al final) | ✅ 9/9: 20 % → 200 pts; marca demo; reclamar otorga; no duplica; pocos días → no comparable; B no reclama con dispositivo de A (403); B no ve puntos de A; si sube → 0 |
+| Recompensas en emulador con historial demo | ✅ 4 h 20 → 3 h 36 por día = 16.8 % → 168 pts; reclamar suma y bloquea el periodo |
 | `supabase/tests/sync_e2e.mjs` contra el proyecto real (2 usuarios de prueba, borrados al final) | ✅ 9/9: guarda; repetir no cambia; más reciente reemplaza; más antiguo no sobrescribe; sin duplicados; B no ve a A; B no escribe en el dispositivo de A (403); sin sesión no lee uso (401); catálogo público legible |
 | Comparación contra Bienestar digital | 📋 pendiente en teléfono real |
 

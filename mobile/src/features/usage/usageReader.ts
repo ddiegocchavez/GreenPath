@@ -141,26 +141,51 @@ async function labelFor(appId: string): Promise<string> {
   }
 }
 
+/** Lee el uso entre periodStart y periodEnd y arma la foto. */
+async function readRange(periodStart: Date, periodEnd: Date, ownAppId?: string): Promise<UsageSnapshot> {
+  const events = await getUsageEvents(periodStart.getTime(), periodEnd.getTime());
+  const totals = sumForegroundFromEvents(events ?? [], periodStart.getTime(), periodEnd.getTime());
+  const items: AppUsage[] = [];
+  for (const [appId, foregroundMs] of totals) {
+    if (appId === ownAppId || foregroundMs < 1000 || isSystemNoise(appId)) continue;
+    items.push({ appId, appLabel: await labelFor(appId), foregroundMs: Math.round(foregroundMs) });
+  }
+  items.sort((a, b) => b.foregroundMs - a.foregroundMs);
+  return { periodStart, periodEnd, observedAt: new Date(), items };
+}
+
 /** Consulta el uso de hoy. Nunca lanza: devuelve un estado. */
 export async function readTodayUsage(ownAppId?: string): Promise<UsageResult> {
   try {
     if (!(await hasUsageStatsPermission())) return { status: 'no_permission' };
-
-    const observedAt = new Date();
-    const periodStart = startOfLocalDay(observedAt);
-    const events = await getUsageEvents(periodStart.getTime(), observedAt.getTime());
-    const totals = sumForegroundFromEvents(events ?? [], periodStart.getTime(), observedAt.getTime());
-
-    const items: AppUsage[] = [];
-    for (const [appId, foregroundMs] of totals) {
-      if (appId === ownAppId || foregroundMs < 1000 || isSystemNoise(appId)) continue;
-      items.push({ appId, appLabel: await labelFor(appId), foregroundMs: Math.round(foregroundMs) });
-    }
-    items.sort((a, b) => b.foregroundMs - a.foregroundMs);
-
-    const snapshot = { periodStart, periodEnd: observedAt, observedAt, items };
-    return items.length ? { status: 'ok', snapshot } : { status: 'empty', snapshot };
+    const now = new Date();
+    const snapshot = await readRange(startOfLocalDay(now), now, ownAppId);
+    return snapshot.items.length ? { status: 'ok', snapshot } : { status: 'empty', snapshot };
   } catch (e) {
     return { status: 'error', message: e instanceof Error ? e.message : String(e) };
   }
+}
+
+/**
+ * Días completos anteriores que Android todavía conserva (normalmente 7–10).
+ * Devuelve solo los días con actividad; los días sin datos no se inventan.
+ */
+export async function readPastDays(days: number, ownAppId?: string): Promise<UsageSnapshot[]> {
+  if (!(await hasUsageStatsPermission())) return [];
+  const out: UsageSnapshot[] = [];
+  const todayStart = startOfLocalDay(new Date());
+  for (let i = 1; i <= days; i++) {
+    const start = new Date(todayStart);
+    start.setDate(start.getDate() - i);
+    const end = new Date(start);
+    end.setDate(end.getDate() + 1);
+    end.setMilliseconds(-1);
+    try {
+      const snap = await readRange(start, end, ownAppId);
+      if (snap.items.length) out.push(snap);
+    } catch {
+      // Un día ilegible no detiene el resto.
+    }
+  }
+  return out;
 }

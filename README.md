@@ -30,13 +30,14 @@ Equipo: **Diego** y **Scar**.
 
 ## Qué hace
 
-La app tiene **tres secciones** (pestañas):
+La app tiene **cuatro secciones** (pestañas):
 
 | Sección | Qué hace | Carpetas de código |
 |---|---|---|
 | **Monitor** | Nombre técnico del módulo que **capta** la actividad (uso de apps en Android) y la **transforma** en datos comprensibles: tiempo por app, estimación con fuente o "pendiente", progreso. | `features/usage`, `features/sync`, `features/progress` |
 | **Reducir sin gastar** | Cambios cotidianos que **no cuestan dinero**, filtrados por esfuerzo y preferencias. “Esto sí va conmigo” / “Ver otra opción”. | `features/recommendations`, `features/preferences` |
 | **Eventos sostenibles** | Carnes asadas y fiestas: lista de recomendaciones y productos sustentables del catálogo curado, con enlaces a Walmart y H‑E‑B. | `features/events` |
+| **Recompensas** | Barra de puntos por nivel. Puntos por % de reducción del **tiempo de uso promedio por día** (últimos 7 días vs. 7 anteriores), calculados en el servidor. No es CO₂. Patrocinadores: próximamente. | `features/rewards` |
 
 Detalle de funciones:
 

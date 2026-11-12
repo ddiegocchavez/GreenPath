@@ -1,9 +1,10 @@
-/** Las 3 secciones de GreenPath como pestañas inferiores. */
+/** Secciones de GreenPath como pestañas inferiores: Monitor, Sin gastar, Eventos y Recompensas. */
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Text } from 'react-native';
 import EventsScreen from '../screens/EventsScreen';
 import MonitorScreen from '../screens/MonitorScreen';
 import ReduceScreen from '../screens/ReduceScreen';
+import RewardsScreen from '../screens/RewardsScreen';
 import { colors, fonts } from '../theme';
 
 const Tab = createBottomTabNavigator();
@@ -28,7 +29,8 @@ export default function Tabs() {
       <Tab.Screen name="Reducir" component={ReduceScreen}
         options={{ title: 'Reducir sin gastar', tabBarLabel: 'Sin gastar', tabBarIcon: icon('🌱') }} />
       <Tab.Screen name="Eventos" component={EventsScreen}
-        options={{ title: 'Eventos sostenibles', tabBarIcon: icon('🎉') }} />
+        options={{ title: 'Eventos sostenibles', tabBarLabel: 'Eventos', tabBarIcon: icon('🎉') }} />
+      <Tab.Screen name="Recompensas" component={RewardsScreen} options={{ tabBarIcon: icon('🏆') }} />
     </Tab.Navigator>
   );
 }
