@@ -3,8 +3,8 @@
 Bitácora para que cualquier colaborador pueda continuar o revisar el trabajo. Se actualiza después de cada avance importante.
 
 **Entrega:** 13 de noviembre de 2026, 9:00 a. m. (America/Mexico_City)
-**Última actualización:** 2026-11-12 ~15:05
-**Repo:** https://github.com/ddiegocchavez/greenpath (privado)
+**Última actualización:** 2026-11-12 ~16:15
+**Repo:** https://github.com/ddiegocchavez/greenpath (privado) · **Ruta local:** `C:\greenpath`
 
 Leyenda: ✅ probado · 🔧 en curso · 📋 pendiente · ⚠️ problema
 
@@ -12,10 +12,16 @@ Leyenda: ✅ probado · 🔧 en curso · 📋 pendiente · ⚠️ problema
 
 ## Siguiente paso
 
-1. Navegación con las **3 pestañas**: Monitor · Reducir sin gastar · Eventos sostenibles, con la paleta de verdes (`theme/colors.ts`).
-2. Cuenta en la app (registro / inicio de sesión con Supabase Auth).
-3. Monitor → llamar `sync_usage` con el resumen real.
-4. Catálogo y metodología (seed).
+1. **Recompensas** (pedido nuevo): puntos según % de reducción, barra de progreso, patrocinadores (tiendas sustentables y otras). Pendiente decidir qué métrica se reduce y cómo se muestran patrocinadores sin acuerdo.
+2. Catálogo y metodología (seed): recomendaciones "sin gastar", eventos y productos.
+3. Pantallas de recomendaciones ("Esto sí va conmigo" / "Ver otra opción") y eventos.
+4. Perfil web (Next.js) y despliegue.
+
+## Hito 2 · Cuenta + Monitor guardando en Supabase ✅ (emulador)
+
+- Inicio de sesión → Monitor con uso real → `sync_usage` → filas en `usage_daily` y `v_daily_activity` de la cuenta. Verificado leyendo con la sesión de la cuenta demo.
+- Cuenta demo: `demo@greenpath.test` (contraseña en `C:\greenpath\.env`, no versionado), creada confirmada desde el servidor.
+- ⚠️ Pendiente que Diego desactive "Confirm email" en Supabase para que el registro desde la app no requiera correo (hackatón). Reactivarlo con SMTP propio antes de producción.
 
 ## Supabase ✅
 
@@ -61,7 +67,13 @@ Leyenda: ✅ probado · 🔧 en curso · 📋 pendiente · ⚠️ problema
 | `expo-android-usagestats` 1.2.0 con Expo 58 | ✅ compila y funciona |
 | Lector de uso `features/usage/usageReader.ts` | ✅ estados ok / sin permiso / vacío / error |
 | Pantalla temporal `screens/UsageDebugScreen.tsx` | ✅ se reemplazará por la pestaña Monitor |
-| Paleta `theme/colors.ts` | ✅ definida, aún no aplicada en pantallas |
+| Paleta `theme/colors.ts` + `theme/index.ts` (Nunito, espacios, radios) | ✅ aplicada |
+| Componentes `ui/Button` (relieve), `ui/Card`, `ui/Screen` | ✅ |
+| Cuenta: `features/auth/AuthProvider.tsx`, `screens/AuthScreen.tsx` | ✅ inicio de sesión probado |
+| Navegación 3 pestañas `navigation/Tabs.tsx` | ✅ Monitor · Sin gastar · Eventos sostenibles |
+| Monitor `screens/MonitorScreen.tsx` + `features/sync/syncUsage.ts` | ✅ medido / estimación pendiente / por app / guardado |
+| Reducir sin gastar / Eventos (`ReduceScreen`, `EventsScreen`) | 🔧 leen el catálogo; vacío por ahora |
+| `metro.config.js` ignora `android/app/build` y `.cxx` | ✅ el paquete pasó de >35 min a ~20 s |
 | Contrato de sincronización v1 | ✅ definido (`shared/contrato/`), sin implementar |
 | Esquema Supabase: perfiles, preferencias, dispositivos, `usage_daily`, factores, catálogo, elecciones, puntos | ✅ aplicado |
 | RLS en las 11 tablas + permisos explícitos | ✅ probado |
@@ -119,6 +131,14 @@ Leyenda: ✅ probado · 🔧 en curso · 📋 pendiente · ⚠️ problema
 | `mobile/.env.example` | Plantilla de variables de la app |
 
 ## Entorno local (máquina de Diego)
+
+- **Proyecto en `C:\greenpath`** (antes en `C:\Users\Diego Emilio\greenpath`). Se movió porque la ruta larga y con espacio rompía la compilación C++ de `react-native-safe-area-context` (`ninja: error: Stat(...)`, límite de 260 caracteres de Windows).
+- Si hay que borrar `mobile/android` con rutas largas: `cmd /c "rd /s /q \\?\C:\greenpath\mobile\android"`.
+- Aun en `C:\greenpath`, `safe-area-context` genera rutas internas de más de 260 caracteres. Solución aplicada:
+  1. `LongPathsEnabled = 1` en `HKLM\SYSTEM\CurrentControlSet\Control\FileSystem` (requiere administrador).
+  2. CMake **3.31.6** del SDK (trae `ninja` 1.12.1, compatible con rutas largas; el 3.22.1 no).
+  3. `mobile/android/local.properties` → `cmake.dir=C\:\\Android\\Sdk\\cmake\\3.31.6`.
+  `android/` se regenera con `expo prebuild`: si se borra, volver a poner `sdk.dir` y `cmake.dir` en `local.properties`.
 
 - JDK: `C:\Program Files\Microsoft\jdk-17.0.21.21-hotspot` (`JAVA_HOME`)
 - Android SDK: `%LOCALAPPDATA%\Android\Sdk`, usado a través del enlace sin espacios **`C:\Android\Sdk`** (`ANDROID_HOME`)
