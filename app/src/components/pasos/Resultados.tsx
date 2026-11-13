@@ -166,6 +166,12 @@ export function Resultados(props: {
               Diferencia: <b>{pesos(ref.total - mejor.total)}</b>
               {ref.plan.huellaKg != null && mejor.huellaKg != null && <> · <b>{(ref.plan.huellaKg - mejor.huellaKg).toFixed(1)} kg CO₂e</b></>}
             </p>
+            {aceptadas.length > 0 && (
+              <p className="mt-1 text-sm font-bold text-pine">
+                La optimizada incluye {aceptadas.length === 1 ? 'la alternativa' : 'las alternativas'} que aceptaste
+                ({aceptadas.map((a) => a.replace('_', ' → ')).join(', ')}); la referencia es tu lista original.
+              </p>
+            )}
             <p className="mt-1 text-xs text-muted">
               Estimado con precios consultados en línea. Será <b>ahorro comprobado</b> cuando registres lo que pagaste en Mi valor.
               La huella es una reducción potencial (cantidad × factor), no emisiones evitadas comprobadas.

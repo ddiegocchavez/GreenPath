@@ -118,7 +118,9 @@ export function recomendarPlan(p: Perfil, precioPlus = 99, incluidas = 4): Recom
   const razones: string[] = [];
 
   if (cm >= 2 && pct <= UMBRAL_PCT_PLUS && planeacion) {
-    razones.push(`Haces ≈ ${cm} compras al mes: las ${incluidas} optimizaciones de Plus alcanzan para ${cm >= incluidas ? 'todas' : 'cada una'}.`);
+    razones.push(cm <= incluidas
+      ? `Haces ≈ ${cm} compras al mes: las ${incluidas} optimizaciones de Plus alcanzan para todas.`
+      : `Haces ≈ ${cm} compras al mes: Plus incluye ${incluidas} optimizaciones completas; las demás pueden usar el plan Gratis o créditos.`);
     razones.push(`Plus cuesta ${pesos(precioPlus)}, el ${pct} % de tu gasto mensual (${pesos(gm)}). Solo vale la pena si las optimizaciones te ahorran al menos eso; lo verás con precios reales antes de decidir.`);
     return { plan: 'plus', razones, costoPctGasto: pct };
   }
@@ -195,7 +197,11 @@ export const ALTERNATIVAS: Alternativa[] = [
 export function alternativasPara(items: Item[], p: Perfil | null) {
   const rechazadas = new Set(p?.alternativas_rechazadas ?? []);
   const veg = p?.restricciones.includes('vegetariano');
-  return ALTERNATIVAS.filter((a) => items.some((i) => i.productoId === a.de) && !rechazadas.has(a.id) && !(veg && a.a === 'pollo'));
+  const aceptadas = new Set(p?.alternativas_aceptadas ?? []);
+  // Si ya aceptaste una alternativa para un producto, no ofrecemos otra para el mismo.
+  const deAceptados = new Set(ALTERNATIVAS.filter((a) => aceptadas.has(a.id)).map((a) => a.de));
+  return ALTERNATIVAS.filter((a) => items.some((i) => i.productoId === a.de) && !rechazadas.has(a.id) && !(veg && a.a === 'pollo')
+    && (!deAceptados.has(a.de) || aceptadas.has(a.id)));
 }
 
 /** Cambia en la lista los productos de las alternativas aceptadas (misma cantidad). */

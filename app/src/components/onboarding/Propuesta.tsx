@@ -14,7 +14,6 @@ const PLUS = [
   'Optimización completa: combina tiendas y respeta tu presupuesto',
   'Sube calidad o sustentabilidad donde alcance tu dinero',
   'Ajusta cantidades con tu revisión de fin de periodo',
-  'Lista habitual vs optimizada, en pesos y CO₂e',
   'Seguimiento de ahorro potencial y comprobado',
 ];
 const NOMBRE_PLAN = { plus: 'GreenPath Plus', gratis: 'GreenPath Gratis', analisis_individual: 'Análisis individual', eventos: 'Análisis de evento', negocios: 'GreenPath Negocios' };
