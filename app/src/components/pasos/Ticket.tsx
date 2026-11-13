@@ -1,7 +1,7 @@
 'use client';
 /** Foto del ticket → OCR (en el teléfono) → revisión editable → qué quiere hacer el usuario. */
 import { useState } from 'react';
-import { cantidadTipica } from '@/lib/optimizar';
+import { cantidadTipica, presentacionPorPrecio } from '@/lib/optimizar';
 import { aprender, analizarTexto, construirIndice, extraerCantidad, extraerPrecio, extraerTotal, leerAprendidas, leerTicket } from '@/lib/ticket';
 import type { Catalogo, Item } from '@/lib/tipos';
 import { Opcion, pesos, Titulo } from '../ui';
@@ -25,7 +25,10 @@ export function PasoTicket({ cat, onLeido }: { cat: Catalogo; onLeido: (items: I
         if (!r.productoId) { if (r.precio != null) sinProducto.push(r.texto); continue; }
         const previo = items.get(r.productoId);
         const unidad = cat.productos.find((p) => p.id === r.productoId)!.unidad;
-        const cant = r.unidades * (extraerCantidad(r.texto, unidad) ?? cantidadTipica(cat, r.productoId));
+        const porPieza = r.precio != null ? r.precio / r.unidades : null;
+        const cant = r.unidades * (extraerCantidad(r.texto, unidad)
+          ?? presentacionPorPrecio(cat, r.productoId, porPieza)
+          ?? cantidadTipica(cat, r.productoId));
         items.set(r.productoId, previo
           ? { ...previo, cantidad: previo.cantidad + cant, precioTicket: (previo.precioTicket ?? 0) + (r.precio ?? 0) }
           : { productoId: r.productoId, cantidad: cant, precioTicket: r.precio ?? undefined, textoTicket: r.texto });

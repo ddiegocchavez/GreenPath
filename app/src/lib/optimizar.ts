@@ -170,6 +170,21 @@ export function cantidadTipica(cat: Catalogo, productoId: string) {
   return [...freq.entries()].sort((a, b) => b[1] - a[1] || a[0] - b[0])[0][0];
 }
 
+/**
+ * Si el ticket no dice la presentación (o el OCR la leyó mal), se usa la del catálogo cuyo precio
+ * se parece más a lo que se pagó por pieza. Solo si la diferencia es menor al 35 %.
+ */
+export function presentacionPorPrecio(cat: Catalogo, productoId: string, precioPieza: number | null | undefined) {
+  if (!precioPieza) return null;
+  let mejor: { cantidad: number; dif: number } | null = null;
+  for (const o of cat.ofertas) {
+    if (o.producto_id !== productoId) continue;
+    const dif = Math.abs(o.precio - precioPieza) / precioPieza;
+    if (!mejor || dif < mejor.dif) mejor = { cantidad: o.cantidad, dif };
+  }
+  return mejor && mejor.dif <= 0.35 ? mejor.cantidad : null;
+}
+
 export const etiquetaTiendas = (cat: Catalogo, ts: TiendaId[]) =>
   ts.map((t) => cat.tiendas.find((x) => x.id === t)?.nombre ?? t).join(' + ');
 

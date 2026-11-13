@@ -1,7 +1,7 @@
 // Pruebas del algoritmo y del lector de ticket: node --experimental-strip-types --test tests/
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { armarPlan, evaluar, recortarAPresupuesto, paquetesNecesarios, cantidadTipica } from '../src/lib/optimizar.ts';
+import { armarPlan, evaluar, recortarAPresupuesto, paquetesNecesarios, cantidadTipica, presentacionPorPrecio } from '../src/lib/optimizar.ts';
 import { analizarTexto, extraerPrecio, emparejarProducto, extraerTotal, extraerCantidad } from '../src/lib/ticket.ts';
 
 test('ticket: presentación del renglón', () => {
@@ -69,6 +69,11 @@ test('recortar: baja paquetes hasta caber en el presupuesto', () => {
 test('huella: suma kg por factor, ignora piezas', () => {
   const p = armarPlan(cat, [{ productoId: 'huevo', cantidad: 12 }, { productoId: 'res', cantidad: 0.5 }], ['heb'], null, 'precio');
   assert.equal(p.huellaKg, 49.7);
+});
+
+test('presentación por precio pagado', () => {
+  assert.equal(presentacionPorPrecio(cat, 'huevo', 45), 18);   // $43 por 18 pzas es lo más parecido
+  assert.equal(presentacionPorPrecio(cat, 'huevo', 500), null); // nada parecido → no adivina
 });
 
 test('cantidad típica: presentación más común', () => {
