@@ -3,8 +3,53 @@
 Hackatón Monterrey · entrega **13-nov-2026 09:00 (CDMX)**.
 
 ## Siguiente paso
-1. Probar en el teléfono con más tickets reales (Walmart y Costco). Cada ticket nuevo se agrega como caso a `app/tests/ticket-real.test.mjs`.
-2. Preparar el pitch y la demo.
+1. Preparar el pitch y la demo:
+   - Recorrido: encuesta → diagnóstico → Plus demo → lista → aceptar res → frijol → guardar → Mi valor.
+   - Después: registrar lo que pagaste → ahorro comprobado.
+2. Probar más tickets reales (Walmart y Costco) y agregarlos a `app/tests/ticket-real.test.mjs`.
+3. Pendiente para después del hackatón:
+   - **Módulos:** Eventos (recuperar del historial de git), Negocios y consumo digital (app Android).
+   - **Pagos y créditos:** créditos sueltos de "Análisis individual", y pasarela de pago real con autorización.
+
+## Onboarding y modelo freemium (13-nov-2026, madrugada)
+**Decisiones de Diego:**
+- Consumo digital queda fuera de la web.
+- Cuenta anónima.
+- Prioridad: primero Mi Ahorro + Gratis/Plus, luego Cotidiano.
+- El diseño actual se conserva; no se aplicó la paleta nueva del prompt.
+
+**Implementado:**
+- **Cuenta anónima de Supabase** (sin correo). Se activó `enable_anonymous_sign_ins` en `supabase/config.toml` con `config push`.
+- **Migración `usuarios_planes_creditos`:**
+  - **Tablas:** `planes` (configurable: precio, optimizaciones incluidas, umbral de compensación), `perfiles`, `optimizaciones`, `movimientos_credito` (libro mayor con `idem_key` única) y `revisiones`.
+  - **RLS:** cada usuario solo accede a lo suyo. El plan y los créditos solo cambian mediante funciones del servidor; el cliente no puede escribir `plan`.
+  - **Funciones:** `mi_estado`, `cambiar_plan_demo`, `guardar_optimizacion` (idempotente, consume 1 crédito en Plus), `registrar_gasto_real` (ahorro comprobado), `evaluar_compensacion` (una vez por análisis, si el ahorro estimado es menor al umbral) y `borrar_mis_datos`.
+- **Encuesta de una sola vez** (`components/onboarding/Encuesta.tsx`):
+  - **Preguntas:** uso, personas (1–15), frecuencia, gasto, problemas y qué no cambiar.
+  - **Detalle extra:** restricciones (vegetariano, sin lactosa), supermercados habituales y marcas.
+  - **Navegación:** barra de progreso y botón para regresar.
+- **Diagnóstico y recomendación de plan** (`lib/perfil.ts`), por reglas y sin inventar ahorros:
+  - **Plus:** se sugiere si hay ≥ 2 compras al mes, si cuesta ≤ 5 % del gasto mensual y si hay algún problema de planeación.
+  - **Análisis individual:** si compras 1 vez al mes.
+  - **Eventos y Negocios:** cuando ese es el uso elegido.
+  - **Gratis:** en cualquier otro caso.
+- **Propuesta Gratis vs Plus** ($99, 4 optimizaciones). Dice "Modo demostración: sin cobro" y no usa urgencia artificial.
+- **Resultados:**
+  - **Preferencias aplicadas:** supermercados, sin P4 si la calidad no se cambia, sin lactosa, vegetariano y marcas.
+  - **Comparación:** la lista habitual (tu súper habitual o tu ticket) contra la optimizada, en pesos y CO₂e.
+  - **Alternativas:** se pueden aceptar o rechazar, y las rechazadas no se repiten.
+  - **Gratis vs Plus:** Gratis muestra la comparación por tienda y una vista previa de Plus calculada con los mismos precios; Plus hace la optimización completa.
+  - **Guardar:** botón idempotente.
+- **Mi valor GreenPath** (`components/MiValor.tsx`):
+  - **Tu dinero:** gasto de referencia, costo optimizado, ahorro potencial (estimado), ahorro comprobado, desperdicio (registrado por el usuario), costo de Plus (demo) y beneficio neto. Cada valor lleva su etiqueta.
+  - **Tu huella:** CO₂e de la referencia contra la alternativa.
+  - **Historial:** registrar lo que pagaste, revisión del periodo (agotados, desperdiciados, sobrantes) y "Repetir lista (ajustada)".
+  - **Créditos:** movimientos, compensación y botón para cancelar Plus sin perder el historial.
+  - **Tus datos:** editar respuestas y borrar todo.
+- **Pruebas:**
+  - `npm test`: 22/22 (incluye 7 nuevas de perfil, plan, preferencias, alternativas, CO₂e y revisión).
+  - `supabase/tests/planes_e2e.mjs`: **18/18 contra Supabase real**, incluida la RLS entre dos usuarios.
+  - Recorrido completo probado en https://coolproject-henna.vercel.app/.
 
 ## Lector de ticket v2 (13-nov-2026, madrugada)
 - **El problema:** con el ticket real de H-E-B (foto de Diego), la v1 solo acertó 1 de 2 renglones reconocidos. Leyó "LECHE VEG AVENA OATLY" como *Avena en hojuelas*, porque los tickets no usan el nombre genérico, sino marca y abreviaturas.
