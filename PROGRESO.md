@@ -11,6 +11,21 @@ Hackatón Monterrey · entrega **13-nov-2026 09:00 (CDMX)**.
    - **Módulos:** Eventos (recuperar del historial de git), Negocios y consumo digital (app Android).
    - **Pagos y créditos:** créditos sueltos de "Análisis individual", y pasarela de pago real con autorización.
 
+## Dashboard, tips y alternativas ganar-ganar (13-nov-2026)
+- **Dashboard** (`components/Dashboard.tsx`, en Mi valor):
+  - Cada despensa guardada registra su desglose por producto: antes/después en pesos y kg CO₂e (columna `optimizaciones.detalle`, migración `detalle_por_producto`).
+  - Muestra el total ahorrado y el CO₂e reducido, dos gráficas de barras por producto (pesos y CO₂e por separado) y una tabla por despensa.
+  - Donde no hay referencia o factor muestra "—": no se inventa.
+- **Tip para reducir CO₂ en alimentos** en cada resultado (`lib/impacto.ts`):
+  - Primero vienen los tips de tu lista, con los factores del catálogo: qué producto aporta más CO₂e y comparaciones como res vs frijol, leche vs avena o arroz vs papa. Después, tips generales con fuente OWID (transporte, desperdicio, empaque).
+  - No se repite hasta ver todos (se guarda en el teléfono) y tiene un botón para "Otro tip".
+- **Algoritmo ganar-ganar** (`optimizar.evaluarAlternativas`):
+  - Busca sustitutos de la misma función en estos grupos: proteína, bebida, guarnición y tortilla.
+  - Compara con la misma cantidad y el precio más bajo en tus tiendas.
+  - Propone primero los que bajan **costo y CO₂e**, después los que solo bajan CO₂e, y nunca más huella.
+  - Respeta vegetariano, lo rechazado y una alternativa por producto.
+- **Pruebas:** `npm test` 31/31.
+
 ## Ticket #2, pago por análisis y calidad con nombres (13-nov-2026)
 - **Ticket real de H-E-B #2** (15 artículos, foto en el carrito):
   - **Reconocimiento:** 15 de 15 productos, cantidades y totales, sin renglones basura. Está como prueba automática y se verificó en producción.

@@ -186,21 +186,28 @@ export function aplicarPreferencias(cat: Catalogo, items: Item[], p: Perfil | nu
 
 const nombre = (cat: Catalogo, id: string) => cat.productos.find((x) => x.id === id)?.nombre ?? id;
 
-// ---------- Alternativas equivalentes (con fuente) ----------
-export type Alternativa = { id: string; de: string; a: string; motivo: string };
-export const ALTERNATIVAS: Alternativa[] = [
-  { id: 'res_frijol', de: 'res', a: 'frijol', motivo: 'Proteína de leguminosa en lugar de carne de res: misma cantidad en kg, mucho menor huella por kg.' },
-  { id: 'res_pollo', de: 'res', a: 'pollo', motivo: 'Pollo en lugar de res: sigue siendo carne, con menor huella por kg.' },
+// ---------- Alternativas equivalentes ----------
+// Sustitutos con la MISMA función en el platillo, comparados con la misma cantidad (kg o L).
+// El algoritmo (optimizar.evaluarAlternativas) solo propone los que bajan emisiones; destaca los que
+// además bajan el costo. Nunca propone una alternativa de mayor huella.
+export type Alternativa = { id: string; de: string; a: string; grupo: string; motivo: string };
+const GRUPOS: { nombre: string; productos: string[]; motivo: string }[] = [
+  { nombre: 'proteína', productos: ['res', 'pollo', 'jamon', 'salchicha', 'frijol', 'lentejas'], motivo: 'Misma función (la proteína del platillo), misma cantidad en kg.' },
+  { nombre: 'bebida', productos: ['leche', 'leche_vegetal'], motivo: 'Mismo uso (café, cereal, licuados), misma cantidad en litros.' },
+  { nombre: 'guarnición', productos: ['arroz', 'papa', 'sopa'], motivo: 'Misma función de guarnición, misma cantidad en kg.' },
+  { nombre: 'tortilla', productos: ['tortilla', 'tortilla_harina'], motivo: 'Mismo uso, misma cantidad en kg.' },
 ];
+export const ALTERNATIVAS: Alternativa[] = GRUPOS.flatMap((g) => g.productos.flatMap((de) =>
+  g.productos.filter((a) => a !== de).map((a) => ({ id: `${de}_${a}`, de, a, grupo: g.nombre, motivo: g.motivo }))));
 
-/** Alternativas que aplican a la lista y no fueron rechazadas antes. */
+/** Candidatos para tu lista: no rechazados, respetando restricciones; una sola alternativa aceptada por producto. */
 export function alternativasPara(items: Item[], p: Perfil | null) {
   const rechazadas = new Set(p?.alternativas_rechazadas ?? []);
   const veg = p?.restricciones.includes('vegetariano');
   const aceptadas = new Set(p?.alternativas_aceptadas ?? []);
-  // Si ya aceptaste una alternativa para un producto, no ofrecemos otra para el mismo.
   const deAceptados = new Set(ALTERNATIVAS.filter((a) => aceptadas.has(a.id)).map((a) => a.de));
-  return ALTERNATIVAS.filter((a) => items.some((i) => i.productoId === a.de) && !rechazadas.has(a.id) && !(veg && a.a === 'pollo')
+  const enLista = new Set(items.map((i) => i.productoId));
+  return ALTERNATIVAS.filter((a) => enLista.has(a.de) && !rechazadas.has(a.id) && !(veg && CARNES.includes(a.a))
     && (!deAceptados.has(a.de) || aceptadas.has(a.id)));
 }
 

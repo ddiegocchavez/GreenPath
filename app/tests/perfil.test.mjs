@@ -4,7 +4,7 @@ import assert from 'node:assert/strict';
 import {
   diagnosticar, recomendarPlan, gastoMensual, comprasPorMes, aplicarPreferencias, alternativasPara, aplicarAlternativas, ajustarPorRevision,
 } from '../src/lib/perfil.ts';
-import { armarPlan } from '../src/lib/optimizar.ts';
+import { armarPlan, evaluarAlternativas } from '../src/lib/optimizar.ts';
 
 const base = {
   nombre: 'Ana', uso: 'hogar', personas: 4, frecuencia: 'mensual', frecuencia_dias: 30, gasto_por_despensa: 4000,
@@ -72,11 +72,35 @@ test('preferencias: supermercados, calidad, sin lactosa, vegetariano y marca', (
 
 test('alternativas: no repite rechazadas y cambia producto con la misma cantidad', () => {
   const items = [{ productoId: 'res', cantidad: 1 }, { productoId: 'frijol', cantidad: 0.9 }];
-  assert.deepEqual(alternativasPara(items, { ...base }).map((a) => a.id), ['res_frijol', 'res_pollo']);
-  assert.deepEqual(alternativasPara(items, { ...base, alternativas_rechazadas: ['res_frijol'] }).map((a) => a.id), ['res_pollo']);
-  assert.deepEqual(alternativasPara(items, { ...base, restricciones: ['vegetariano'] }).map((a) => a.id), ['res_frijol']);
+  const ids = (p) => alternativasPara(items, p).filter((a) => a.de === 'res').map((a) => a.id).sort();
+  assert.deepEqual(ids({ ...base }), ['res_frijol', 'res_jamon', 'res_lentejas', 'res_pollo', 'res_salchicha']);
+  assert.ok(!ids({ ...base, alternativas_rechazadas: ['res_frijol'] }).includes('res_frijol'));
+  assert.deepEqual(ids({ ...base, restricciones: ['vegetariano'] }), ['res_frijol', 'res_lentejas']);
+  assert.deepEqual(ids({ ...base, alternativas_aceptadas: ['res_frijol'] }), ['res_frijol']); // una por producto
   const nuevo = aplicarAlternativas(items, ['res_frijol']);
   assert.deepEqual(nuevo, [{ productoId: 'frijol', cantidad: 1.9 }]);
+});
+
+test('algoritmo ganar-ganar: propone lo que baja costo y CO₂e; nunca más huella', () => {
+  const items = [{ productoId: 'res', cantidad: 1 }, { productoId: 'pollo', cantidad: 1 }];
+  const ev = evaluarAlternativas(cat, items, alternativasPara(items, { ...base }), ['walmart', 'heb']);
+  // res 1 kg = 2 × $112 = $224, 99.5 kg → frijol 2 × $25 = $50, 3.2 kg: gana-gana
+  const rf = ev.find((e) => e.id === 'res_frijol');
+  assert.deepEqual([rf.tipo, rf.ahorro, rf.reduccion], ['gana_gana', 174, 96.3]);
+  // pollo $94 → res: más huella → nunca se propone
+  assert.ok(!ev.some((e) => e.id === 'pollo_res'));
+  // pollo $94 → frijol $50: gana-gana
+  assert.equal(ev.find((e) => e.id === 'pollo_frijol').tipo, 'gana_gana');
+  // orden: primero gana-gana por mayor reducción
+  assert.equal(ev[0].id, 'res_frijol');
+  assert.ok(ev.every((e) => e.reduccion > 0));
+});
+
+test('algoritmo: si es más caro pero baja huella, se marca como menor_huella', () => {
+  const caro = { ...cat, ofertas: [...cat.ofertas.filter((o) => o.producto_id !== 'frijol'), O(9, 'frijol', 'walmart', 0.9, 300, 3)] };
+  const items = [{ productoId: 'pollo', cantidad: 1 }];
+  const ev = evaluarAlternativas(caro, items, alternativasPara(items, { ...base }), ['walmart', 'heb']);
+  assert.equal(ev.find((e) => e.id === 'pollo_frijol').tipo, 'menor_huella');
 });
 
 test('CO₂e: cambiar 1 kg de res por frijol baja la huella estimada', () => {

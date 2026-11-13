@@ -185,6 +185,40 @@ export function presentacionPorPrecio(cat: Catalogo, productoId: string, precioP
   return mejor && mejor.dif <= 0.35 ? mejor.cantidad : null;
 }
 
+export type EvaluacionAlternativa = {
+  id: string; de: string; a: string; motivo: string;
+  costoDe: number; costoA: number; ahorro: number;      // pesos (+ = la alternativa es más barata)
+  kgDe: number; kgA: number; reduccion: number;          // kg CO2e (+ = la alternativa emite menos)
+  tipo: 'gana_gana' | 'menor_huella';
+};
+
+/**
+ * Para cada sustituto equivalente, compara con la MISMA cantidad y en las mismas tiendas:
+ * costo más barato disponible y CO2e (cantidad comprada × factor). Solo devuelve los que bajan emisiones;
+ * 'gana_gana' = además bajan el costo. Ordena gana-gana primero, por mayor reducción de CO2e.
+ */
+export function evaluarAlternativas(
+  cat: Catalogo, items: Item[], candidatos: { id: string; de: string; a: string; motivo: string }[], tiendas: TiendaId[],
+): EvaluacionAlternativa[] {
+  const out: EvaluacionAlternativa[] = [];
+  for (const c of candidatos) {
+    const item = items.find((i) => i.productoId === c.de);
+    const pDe = cat.productos.find((p) => p.id === c.de), pA = cat.productos.find((p) => p.id === c.a);
+    if (!item || !pDe || !pA || pDe.unidad !== pA.unidad) continue;
+    const de = armarPlan(cat, [item], tiendas, null, 'precio');
+    const a = armarPlan(cat, [{ productoId: c.a, cantidad: item.cantidad }], tiendas, null, 'precio');
+    if (!de.elecciones.length || !a.elecciones.length || de.huellaKg == null || a.huellaKg == null) continue;
+    const ahorro = round2(de.total - a.total);
+    const reduccion = Math.round((de.huellaKg - a.huellaKg) * 10) / 10;
+    if (reduccion <= 0) continue; // nunca proponer más huella
+    out.push({
+      id: c.id, de: c.de, a: c.a, motivo: c.motivo, costoDe: de.total, costoA: a.total, ahorro,
+      kgDe: de.huellaKg, kgA: a.huellaKg, reduccion, tipo: ahorro >= 0.5 ? 'gana_gana' : 'menor_huella',
+    });
+  }
+  return out.sort((x, y) => (x.tipo === y.tipo ? y.reduccion - x.reduccion : x.tipo === 'gana_gana' ? -1 : 1));
+}
+
 export const etiquetaTiendas = (cat: Catalogo, ts: TiendaId[]) =>
   ts.map((t) => cat.tiendas.find((x) => x.id === t)?.nombre ?? t).join(' + ');
 

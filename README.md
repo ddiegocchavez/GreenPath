@@ -13,8 +13,9 @@ GreenPath recibe tu lista de despensa o la foto de tu ticket, tu presupuesto y t
 | **Encuesta inicial** (una vez) | Uso (hogar, evento, negocio), personas, frecuencia, gasto, problemas y qué no cambiarías (marcas, calidad, restricciones, supermercados). Se edita desde Mi valor. |
 | **Diagnóstico y plan** | Reglas transparentes, sin IA generativa y sin inventar ahorros. Recomienda Gratis, Plus, análisis individual, Eventos o Negocios según tu frecuencia y tu gasto. |
 | **Despensa** | Lista escrita o foto del ticket (el OCR se hace en el teléfono). Revisas y corriges, eliges presupuesto y prioridad (precio, calidad o sustentabilidad) y ves los resultados. |
-| **Resultados** | Recomendación por tienda o pareja de tiendas, tu lista habitual contra la optimizada en pesos y CO₂e, preferencias respetadas, alternativas para aceptar o rechazar (res → frijol) y la sucursal más cercana. |
+| **Resultados** | Recomendación por tienda o pareja de tiendas y la sucursal más cercana. Tu lista habitual contra la optimizada, en pesos y CO₂e, respetando tus preferencias. Alternativas **ganar-ganar** que bajan costo y CO₂e, y un tip distinto para reducir CO₂ en cada resultado. |
 | **Gratis / Plus** | Gratis compara por tienda y muestra una vista previa de Plus. Plus ($99 al mes, **modo demostración, sin cobros**) da 4 optimizaciones completas al mes: combina tiendas y mejora calidad o sustentabilidad dentro de tu presupuesto. |
+| **Dashboard** | En Mi valor: lo que disminuiste por producto en cada despensa, en pesos y kg CO₂e (barras y tabla). |
 | **Mi valor GreenPath** | Ahorro **estimado** contra ahorro **comprobado** (lo que registras que pagaste), desperdicio, costo de Plus y beneficio neto. También huella, historial, revisión del periodo (ajusta tu siguiente lista), créditos, cancelar Plus y borrar tus datos. |
 | **Cuenta** | Anónima: sin correo ni contraseña. El botón "Cerrar sesión" está en las pantallas de inicio. |
 
@@ -56,7 +57,8 @@ flowchart LR
 3. **Si sobra presupuesto** (Plus), sube calidad o sustentabilidad (S) donde cada peso extra da más puntos.
 4. **Si ni lo más barato alcanza,** quita paquetes del renglón más caro y te dice qué ajustó.
 5. **Compara** cada tienda sola y cada pareja (Plus). Ordena por cobertura, presupuesto, nivel y total.
-6. **Referencia justa.** Compara contra tu ticket o contra la misma lista en tu súper habitual. Si aceptaste alternativas, lo dice.
+6. **Alternativas ganar-ganar.** Busca sustitutos equivalentes en tu lista: proteína (res, pollo, jamón, salchicha, frijol, lentejas), bebida (leche, bebida de avena), guarnición (arroz, papa, pasta) y tortilla (maíz, harina). Los compara con la misma cantidad y el precio más bajo en tus tiendas. Primero propone los que **bajan costo y CO₂e a la vez**, luego los que solo bajan CO₂e. **Nunca propone más huella.** Tú aceptas o rechazas; lo rechazado no se repite.
+7. **Referencia justa.** Compara contra tu ticket o contra la misma lista en tu súper habitual. Si aceptaste alternativas, lo dice.
 
 ## Lector de ticket
 - Aprende del catálogo: cada título capturado es un ejemplo. Las palabras raras y las marcas pesan más, y las abreviaturas se leen como prefijo.

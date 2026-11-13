@@ -3,7 +3,7 @@
 import { useMemo, useState } from 'react';
 import { actualizarAlternativas, guardarOptimizacion, type Estado } from '@/lib/cuenta';
 import { mapsUrl, masCercana } from '@/lib/geo';
-import { armarPlan, etiquetaTiendas, evaluar, type Plan, type Recorte } from '@/lib/optimizar';
+import { armarPlan, etiquetaTiendas, evaluar, evaluarAlternativas, type Plan, type Recorte } from '@/lib/optimizar';
 import { ALTERNATIVAS, alternativasPara, aplicarAlternativas, aplicarPreferencias, type Perfil } from '@/lib/perfil';
 import { desglose, siguienteTip, tipsPara, type Tip } from '@/lib/impacto';
 import type { Catalogo, Item, Prioridad, Punto, TiendaId } from '@/lib/tipos';
@@ -30,6 +30,12 @@ export function Resultados(props: {
   const pref = useMemo(() => aplicarPreferencias(props.cat, props.items, perfil), [props.cat, props.items, perfil]);
   const cat = pref.cat;
   const disponibles = alternativasPara(pref.items, perfil);
+  // Algoritmo: sustitutos equivalentes que bajan CO2e; primero los que además bajan el costo.
+  const evaluadas = evaluarAlternativas(pref.cat, pref.items, disponibles, pref.cat.tiendas.map((t) => t.id));
+  const ganaGana = evaluadas.filter((e) => e.tipo === 'gana_gana');
+  // Hasta 2 opciones por producto (la aceptada siempre visible).
+  const mostrables = evaluadas.filter((e, _, arr) =>
+    (perfil?.alternativas_aceptadas ?? []).includes(e.id) || arr.filter((x) => x.de === e.de && x.tipo === e.tipo).indexOf(e) < 2);
   const aceptadas = (perfil?.alternativas_aceptadas ?? []).filter((a) => disponibles.some((d) => d.id === a));
   const claveAceptadas = aceptadas.join();
   const items = aplicarAlternativas(pref.items, claveAceptadas ? claveAceptadas.split(',') : []);
@@ -194,29 +200,42 @@ export function Resultados(props: {
         )}
       </section>
 
-      {disponibles.length > 0 && (
+      {evaluadas.length > 0 && (
         <section className="card border-leaf bg-mint">
           <p className="font-extrabold text-forest">🌱 Alternativas equivalentes</p>
-          <ul className="mt-2 space-y-3">
-            {disponibles.map((a) => {
-              const pDe = cat.productos.find((p) => p.id === a.de), pA = cat.productos.find((p) => p.id === a.a);
-              const cant = pref.items.find((i) => i.productoId === a.de)?.cantidad ?? 0;
-              const evita = pDe?.huella_kgco2e != null && pA?.huella_kgco2e != null ? Math.round(cant * (pDe.huella_kgco2e - pA.huella_kgco2e) * 10) / 10 : null;
-              const acepto = aceptadas.includes(a.id);
-              return (
-                <li key={a.id} className="text-sm">
-                  <p><b>{pDe?.nombre} → {pA?.nombre}</b>. {a.motivo}</p>
-                  {evita != null && <p className="text-muted">≈ {evita} kg CO₂e menos ({pDe?.huella_kgco2e} vs {pA?.huella_kgco2e} kg CO₂e/kg, {pDe?.huella_fuente}).</p>}
-                  {perfil && (
-                    <div className="mt-1 flex gap-2">
-                      <button onClick={() => decidirAlternativa(a.id, !acepto)} className={`rounded-full px-3 py-1 font-bold ${acepto ? 'bg-leaf text-white' : 'border border-leaf bg-white text-forest'}`}>{acepto ? '✓ Aceptada' : 'Aceptar'}</button>
-                      {!acepto && <button onClick={() => decidirAlternativa(a.id, false)} className="rounded-full border border-mint bg-white px-3 py-1 font-bold text-muted">No me interesa</button>}
-                    </div>
-                  )}
-                </li>
-              );
-            })}
-          </ul>
+          {ganaGana.length > 0 && <p className="mt-1 text-sm font-bold text-pine">{ganaGana.length} {ganaGana.length === 1 ? 'cambio baja' : 'cambios bajan'} tu costo y tus emisiones a la vez.</p>}
+          {([['gana_gana', '💚 Ahorras y reduces CO₂e'], ['menor_huella', '🌍 Reducen CO₂e (cuestan más)']] as const).map(([tipo, titulo]) => {
+            const lista = mostrables.filter((e) => e.tipo === tipo);
+            if (!lista.length) return null;
+            return (
+              <div key={tipo} className="mt-3">
+                <p className="text-sm font-extrabold text-forest">{titulo}</p>
+                <ul className="mt-1 space-y-3">
+                  {lista.map((e) => {
+                    const pDe = cat.productos.find((p) => p.id === e.de), pA = cat.productos.find((p) => p.id === e.a);
+                    const acepto = aceptadas.includes(e.id);
+                    return (
+                      <li key={e.id} className="text-sm">
+                        <p><b>{pDe?.nombre} → {pA?.nombre}</b>. {e.motivo}</p>
+                        <p className="mt-0.5">
+                          {e.ahorro >= 0.5 ? <b className="text-leaf">Ahorras {pesos(e.ahorro)}</b> : <b>Cuesta {pesos(-e.ahorro)} más</b>}
+                          {' · '}<b className="text-leaf">−{e.reduccion} kg CO₂e</b>
+                          <span className="text-muted"> ({pesos(e.costoDe)} → {pesos(e.costoA)}; {e.kgDe} → {e.kgA} kg)</span>
+                        </p>
+                        <p className="text-xs text-muted">Precio más bajo disponible en tus tiendas; huella: {pDe?.huella_kgco2e} vs {pA?.huella_kgco2e} kg CO₂e por kg ({pDe?.huella_fuente}).</p>
+                        {perfil && (
+                          <div className="mt-1 flex gap-2">
+                            <button onClick={() => decidirAlternativa(e.id, !acepto)} className={`rounded-full px-3 py-1 font-bold ${acepto ? 'bg-leaf text-white' : 'border border-leaf bg-white text-forest'}`}>{acepto ? '✓ Aceptada' : 'Aceptar'}</button>
+                            {!acepto && <button onClick={() => decidirAlternativa(e.id, false)} className="rounded-full border border-mint bg-white px-3 py-1 font-bold text-muted">No me interesa</button>}
+                          </div>
+                        )}
+                      </li>
+                    );
+                  })}
+                </ul>
+              </div>
+            );
+          })}
         </section>
       )}
 
