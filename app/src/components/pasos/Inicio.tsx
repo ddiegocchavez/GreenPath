@@ -8,7 +8,7 @@ import { Opcion, Titulo } from '../ui';
 export function PasoNombre({ inicial, onListo }: { inicial: string; onListo: (n: string) => void }) {
   const [nombre, setNombre] = useState(inicial);
   return (
-    <form onSubmit={(e) => { e.preventDefault(); if (nombre.trim()) onListo(nombre.trim()); }} className="flex flex-1 flex-col">
+    <form onSubmit={(e) => { e.preventDefault(); if (nombre.trim()) onListo(nombre.trim()); }} className="flex flex-1 flex-col justify-center pb-10">
       <div className="mb-6 rounded-3xl bg-forest p-6 text-white">
         <p className="text-5xl" aria-hidden>🛒🌿</p>
         <p className="mt-3 text-2xl font-black">Tu despensa al mejor precio</p>
@@ -16,7 +16,7 @@ export function PasoNombre({ inicial, onListo }: { inicial: string; onListo: (n:
       </div>
       <Titulo>¿Cómo te llamas?</Titulo>
       <input autoFocus className="field" value={nombre} onChange={(e) => setNombre(e.target.value)} placeholder="Tu nombre" maxLength={40} />
-      <div className="mt-auto pt-6"><button className="btn btn-primary" disabled={!nombre.trim()}>Continuar</button></div>
+      <div className="pt-6"><button className="btn btn-primary" disabled={!nombre.trim()}>Continuar</button></div>
     </form>
   );
 }
@@ -33,13 +33,13 @@ export function PasoUbicacion({ nombre, onListo }: { nombre: string; onListo: (p
     );
   };
   return (
-    <div className="flex flex-1 flex-col">
+    <div className="flex flex-1 flex-col justify-center pb-10">
       <Titulo sub="La usamos solo en tu teléfono para ordenar las tiendas por cercanía. No la guardamos.">
         ¡Hola, {nombre}! ¿Dónde estás?
       </Titulo>
       <div className="card text-6xl text-center" aria-hidden>📍</div>
       {estado === 'error' && <p className="mt-4 text-alert font-bold">No pudimos obtener tu ubicación. Puedes usar el centro de Monterrey.</p>}
-      <div className="mt-auto space-y-3 pt-6">
+      <div className="space-y-3 pt-6">
         <button className="btn btn-primary" onClick={pedir} disabled={estado === 'buscando'}>
           {estado === 'buscando' ? 'Buscando…' : 'Usar mi ubicación'}
         </button>

@@ -16,7 +16,7 @@ import { Resultados } from '@/components/pasos/Resultados';
 import { Encuesta, perfilVacio } from '@/components/onboarding/Encuesta';
 import { Propuesta } from '@/components/onboarding/Propuesta';
 import { MiValor } from '@/components/MiValor';
-import { asegurarSesion, cambiarPlanDemo, guardarPerfil, leerPerfil, leerPlanes, miEstado, type Estado, type Plan } from '@/lib/cuenta';
+import { asegurarSesion, cambiarPlanDemo, cerrarSesion, guardarPerfil, leerPerfil, leerPlanes, miEstado, type Estado, type Plan } from '@/lib/cuenta';
 import { evaluar, recortarAPresupuesto, type Recorte } from '@/lib/optimizar';
 import { ajustarPorRevision, type Perfil } from '@/lib/perfil';
 import { cargarCatalogo } from '@/lib/supabase';
@@ -105,7 +105,8 @@ export default function Home() {
   return (
     <main className="mx-auto flex min-h-dvh w-full max-w-md flex-col px-4">
       <Encabezado paso={idx >= 0 ? idx + 1 : undefined} total={ORDEN.length} onAtras={historial.length > 1 ? atras : undefined}
-        onMiValor={perfil && uid && paso !== 'mivalor' ? () => ir('mivalor') : undefined} plan={perfil ? estado?.plan : undefined} />
+        onMiValor={perfil && uid && paso !== 'mivalor' ? () => ir('mivalor') : undefined} plan={perfil ? estado?.plan : undefined}
+        onCerrarSesion={uid && (paso === 'nombre' || paso === 'ubicacion') ? async () => { await cerrarSesion().catch(() => undefined); location.reload(); } : undefined} />
       {errorCat && <p className="card mb-4 font-bold text-alert">No pudimos cargar los precios: {errorCat}</p>}
       {aviso && <p className="card mb-4 text-sm text-muted">{aviso}</p>}
 

@@ -1,12 +1,15 @@
 /** Piezas visuales compartidas. */
-import type { ReactNode } from 'react';
+'use client';
+import { useState, type ReactNode } from 'react';
 
 export const pesos = (n: number) => n.toLocaleString('es-MX', { style: 'currency', currency: 'MXN' });
 
-export function Encabezado({ paso, total, onAtras, onMiValor, plan }: {
-  paso?: number; total?: number; onAtras?: () => void; onMiValor?: () => void; plan?: 'gratis' | 'plus';
+export function Encabezado({ paso, total, onAtras, onMiValor, plan, onCerrarSesion }: {
+  paso?: number; total?: number; onAtras?: () => void; onMiValor?: () => void; plan?: 'gratis' | 'plus'; onCerrarSesion?: () => void;
 }) {
   return (
+    <>
+    {onCerrarSesion && <CerrarSesion onConfirmar={onCerrarSesion} />}
     <header className="flex items-center gap-3 py-4">
       {onAtras ? (
         <button onClick={onAtras} className="rounded-full bg-white px-3 py-1 font-bold text-forest border border-mint" aria-label="Atrás">←</button>
@@ -24,6 +27,28 @@ export function Encabezado({ paso, total, onAtras, onMiValor, plan }: {
         )}
       </div>
     </header>
+    </>
+  );
+}
+
+/** Cerrar sesión con confirmación en pantalla (la cuenta es anónima: al salir no se puede volver a entrar a ella). */
+function CerrarSesion({ onConfirmar }: { onConfirmar: () => void }) {
+  const [preguntando, setPreguntando] = useState(false);
+  return (
+    <div className="flex justify-end pt-3">
+      {!preguntando ? (
+        <button onClick={() => setPreguntando(true)} className="rounded-full border border-mint bg-white px-3 py-1 text-sm font-bold text-muted">Cerrar sesión</button>
+      ) : (
+        <div className="card w-full !p-3 text-sm">
+          <p className="font-bold text-forest">¿Cerrar sesión?</p>
+          <p className="text-muted">Tu cuenta es anónima: al salir empiezas de cero y no podrás volver a ver este historial.</p>
+          <div className="mt-2 flex gap-2">
+            <button onClick={onConfirmar} className="rounded-full bg-alert px-4 py-1 font-bold text-white">Sí, cerrar sesión</button>
+            <button onClick={() => setPreguntando(false)} className="rounded-full border border-mint bg-white px-4 py-1 font-bold text-forest">Cancelar</button>
+          </div>
+        </div>
+      )}
+    </div>
   );
 }
 

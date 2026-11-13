@@ -110,6 +110,11 @@ export async function guardarRevision(uid: string, optimizacionId: string, r: Re
   if (error) throw new Error(error.message);
 }
 
+/** Cierra la sesión anónima; al volver a entrar se crea una cuenta nueva. */
+export async function cerrarSesion() {
+  await sb().auth.signOut();
+}
+
 export async function borrarMisDatos() {
   const { error } = await sb().rpc('borrar_mis_datos');
   if (error) throw new Error(error.message);
