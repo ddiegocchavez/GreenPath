@@ -11,6 +11,14 @@ Hackatón Monterrey · entrega **13-nov-2026 09:00 (CDMX)**.
    - **Módulos:** Eventos (recuperar del historial de git), Negocios y consumo digital (app Android).
    - **Pagos y créditos:** créditos sueltos de "Análisis individual", y pasarela de pago real con autorización.
 
+## Ajustes de interfaz (13-nov-2026)
+- **"Cerrar sesión"** arriba a la derecha en las 2 primeras pantallas (nombre y ubicación).
+  - Pide confirmación en pantalla, porque la cuenta es anónima: al salir empiezas de cero.
+  - Sirve para pasar la demo a otra persona.
+  - Probado en producción: regresa a "¿Cómo te llamas?" como usuario nuevo.
+- **Pantallas centradas:** "¿Cómo te llamas?" y "¿Dónde estás?" quedan al centro vertical, con los botones debajo.
+- **Documentación actualizada:** README raíz (funciones, flujo con onboarding, arquitectura con cuentas y créditos, pruebas) y los README de `app/`, `components/` y `lib/`.
+
 ## Onboarding y modelo freemium (13-nov-2026, madrugada)
 **Decisiones de Diego:**
 - Consumo digital queda fuera de la web.
@@ -96,26 +104,33 @@ Hackatón Monterrey · entrega **13-nov-2026 09:00 (CDMX)**.
 | `leerTicket`, `analizarTexto`, `extraerPrecio`, `extraerCantidad`, `extraerTotal`, `emparejarProducto` | `app/src/lib/ticket.ts` | OCR del ticket y lectura de cada renglón. |
 | `masCercana`, `distanciaKm` | `app/src/lib/geo.ts` | Calculan la sucursal más cercana. |
 | `cargarCatalogo` | `app/src/lib/supabase.ts` | Lee el catálogo de Supabase. |
+| `presentacionPorPrecio` | `app/src/lib/optimizar.ts` | Si el ticket no dice la presentación, usa la del catálogo más parecida al precio pagado. |
+| `construirIndice`, `emparejar`, `extraerColumnas`, `aprender` | `app/src/lib/ticket.ts` | Lector de ticket que aprende del catálogo y de las correcciones. |
+| `diagnosticar`, `recomendarPlan`, `gastoMensual` | `app/src/lib/perfil.ts` | Diagnóstico y plan por reglas. |
+| `aplicarPreferencias`, `alternativasPara`, `aplicarAlternativas`, `ajustarPorRevision` | ídem | Preferencias, alternativas equivalentes y ajuste por la revisión del periodo. |
+| `asegurarSesion`, `guardarPerfil`, `miEstado`, `cambiarPlanDemo`, `guardarOptimizacion`, `registrarGastoReal`, `evaluarCompensacion`, `guardarRevision`, `cerrarSesion`, `borrarMisDatos` | `app/src/lib/cuenta.ts` | Cuenta anónima, plan, créditos e historial. |
 
 ## Pruebas
 | Prueba | Resultado |
 |---|---|
-| `npm test` (algoritmo, lector de ticket y ticket real de H-E-B) | 14/14 ✅ |
+| `npm test` (algoritmo, lector de ticket con ticket real de H-E-B, perfil, plan, preferencias, alternativas, CO₂e y revisión) | 22/22 ✅ |
+| `supabase/tests/planes_e2e.mjs` (Supabase real: plan demo, créditos, doble cobro, compensación, RLS y borrado) | 18/18 ✅ |
 | `tsc --noEmit` y `eslint` | ✅ |
-| Flujo de lista en Chrome (localhost) | ✅ |
-| Flujo de ticket con imagen generada | ✅ OCR correcto salvo "606G" |
+| Recorrido en producción: encuesta → Plus demo → lista → alternativa → guardar → Mi valor → cerrar sesión | ✅ |
+| Ticket real de H-E-B en producción (foto) | ✅ 6/6 productos, precios y total |
 
 ## Problemas pendientes
 - **Frutas y verduras a granel:** casi no hay en línea (no salieron jitomate, plátano ni limón).
-- **Precios vigentes:** son del 12-nov y en tienda pueden variar. Para la siguiente versión falta un proceso de actualización.
+- **Usuarios de prueba:** la prueba E2E crea cuentas anónimas vacías en Supabase Auth (sus datos se borran al terminar).
+- **Precios vigentes:** son del 12 y 13-nov y en tienda pueden variar. Para la siguiente versión falta un proceso de actualización.
 - **Precio de Walmart:** es el general en línea; no se fijó sucursal.
 - **Tickets reales:** el OCR con tickets térmicos arrugados va a fallar más. La pantalla de revisión lo mitiga.
 - **`C:\greenpath`:** carpeta local vieja que Diego debe borrar a mano.
 
 ## Archivos
-- `app/`: web móvil.
+- `app/`: web móvil (pantallas en `src/components`, lógica en `src/lib`, pruebas en `tests`).
 - `data/`: capturas, sucursales y generador.
-- `supabase/migrations/`: esquema y datos.
+- `supabase/`: migraciones (catálogo, usuarios, planes y créditos), `config.toml` (cuentas anónimas) y `tests/planes_e2e.mjs`.
 
 ## Entorno local
 - `.env` (raíz, no versionado): `SUPABASE_DB_PASSWORD`.

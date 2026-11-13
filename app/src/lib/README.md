@@ -1,7 +1,16 @@
 # lib/ — Lógica sin interfaz
 
 - `tipos.ts` — tipos del catálogo y del flujo.
-- `supabase.ts` — cliente con llave pública y `cargarCatalogo()` (solo lectura).
-- `optimizar.ts` — algoritmo: lo más barato primero; si sobra presupuesto, sube calidad (P) o sustentabilidad (S) donde cada peso extra rinde más; recorte si no alcanza; evalúa cada tienda y cada pareja.
-- `ticket.ts` — OCR en el navegador (Tesseract.js) y lectura de renglones: producto, precio, presentación y total.
+- `supabase.ts` — cliente con llave pública (la sesión anónima se guarda en el navegador) y `cargarCatalogo()`.
+- `cuenta.ts` — cuenta anónima, perfil, plan demo, créditos, optimizaciones, gasto real, compensación, revisiones, cerrar sesión y borrar datos (funciones RPC de Supabase).
+- `optimizar.ts` — algoritmo:
+  - Primero lo más barato; si sobra presupuesto, sube P o S donde cada peso rinde más.
+  - Recorte si no alcanza.
+  - Evalúa cada tienda y cada pareja.
+  - Elige la presentación según el precio pagado.
+- `perfil.ts` — encuesta → diagnóstico → plan recomendado, más:
+  - Preferencias aplicadas al catálogo.
+  - Alternativas equivalentes (res → frijol o pollo).
+  - Ajuste de la lista por la revisión del periodo.
+- `ticket.ts` — OCR en el navegador (Tesseract.js) y lector que aprende del catálogo (IDF, marcas, abreviaturas) y de tus correcciones. Lee columnas y total.
 - `geo.ts` — distancia y sucursal más cercana.
