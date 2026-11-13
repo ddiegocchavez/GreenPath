@@ -138,3 +138,50 @@ export function siguienteTip(pool: Tip[], vistos: string[]): { tip: Tip; vistos:
   if (nuevo) return { tip: nuevo, vistos: [...vistos, nuevo.id] };
   return { tip: pool[0], vistos: [pool[0].id] };
 }
+
+// ---------- Comparación justa ----------
+export type Comparacion = {
+  ref: number; opt: number; ahorro: number;            // pesos, solo productos cubiertos en ambas listas
+  refKg: number | null; optKg: number | null;          // CO2e, solo productos con factor en ambas
+  comparables: number; excluidos: string[];            // nombres que no se pudieron comparar
+};
+
+/**
+ * Totales SOLO con productos que aparecen (con precio) en las dos listas.
+ * Un producto sin precio o sin referencia NO cuenta como ahorro: se lista en `excluidos`.
+ */
+export function compararCubiertos(filas: FilaDetalle[]): Comparacion {
+  const ok = filas.filter((f) => f.ref_mxn != null && f.opt_mxn != null);
+  const conKg = ok.filter((f) => f.ref_kg != null && f.opt_kg != null);
+  const ref = r2(ok.reduce((s, f) => s + (f.ref_mxn as number), 0));
+  const opt = r2(ok.reduce((s, f) => s + (f.opt_mxn as number), 0));
+  return {
+    ref, opt, ahorro: r2(ref - opt),
+    refKg: conKg.length ? r2(conKg.reduce((s, f) => s + (f.ref_kg as number), 0)) : null,
+    optKg: conKg.length ? r2(conKg.reduce((s, f) => s + (f.opt_kg as number), 0)) : null,
+    comparables: ok.length,
+    excluidos: filas.filter((f) => f.ref_mxn == null || f.opt_mxn == null).map((f) => f.cambio ?? f.nombre),
+  };
+}
+
+// ---------- Distribución del presupuesto (Plus) ----------
+export type Distribucion = {
+  categorias: { categoria: string; total: number; pct: number }[];
+  total: number; presupuesto: number | null; sobrante: number | null; falta: number | null;
+};
+
+export function distribuirPresupuesto(cat: Catalogo, plan: Plan, presupuesto: number | null): Distribucion {
+  const m = new Map<string, number>();
+  for (const e of plan.elecciones) {
+    const c = cat.productos.find((p) => p.id === e.producto.id)?.categoria ?? 'Otros';
+    m.set(c, r2((m.get(c) ?? 0) + e.costo));
+  }
+  const total = r2(plan.total);
+  const categorias = [...m.entries()].map(([categoria, t]) => ({ categoria, total: t, pct: total ? Math.round((t / total) * 100) : 0 }))
+    .sort((a, b) => b.total - a.total);
+  return {
+    categorias, total, presupuesto,
+    sobrante: presupuesto != null && presupuesto >= total ? r2(presupuesto - total) : null,
+    falta: presupuesto != null && presupuesto < total ? r2(total - presupuesto) : null,
+  };
+}

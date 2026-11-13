@@ -16,9 +16,10 @@ import { Resultados } from '@/components/pasos/Resultados';
 import { Encuesta, perfilVacio } from '@/components/onboarding/Encuesta';
 import { Propuesta } from '@/components/onboarding/Propuesta';
 import { MiValor } from '@/components/MiValor';
-import { asegurarSesion, cambiarPlanDemo, cerrarSesion, guardarPerfil, leerPerfil, leerPlanes, miEstado, type Estado, type Plan } from '@/lib/cuenta';
-import { evaluar, recortarAPresupuesto, type Recorte } from '@/lib/optimizar';
-import { ajustarPorRevision, type Perfil } from '@/lib/perfil';
+import { RevisionRapida } from '@/components/RevisionRapida';
+import { asegurarSesion, cambiarPlanDemo, cerrarSesion, historial as leerHistorial, guardarPerfil, leerPerfil, leerPlanes, miEstado, type Estado, type Optimizacion, type Plan } from '@/lib/cuenta';
+import { recortarAPresupuesto, type Recorte } from '@/lib/optimizar';
+import { ajustarPorRevision, type Perfil, type Revision } from '@/lib/perfil';
 import { cargarCatalogo } from '@/lib/supabase';
 import type { Catalogo, Item, Prioridad, Punto } from '@/lib/tipos';
 
@@ -37,6 +38,7 @@ export default function Home() {
   const [planes, setPlanes] = useState<Plan[]>([]);
   const [estado, setEstado] = useState<Estado | null>(null);
   const [aviso, setAviso] = useState<string | null>(null);
+  const [pendiente, setPendiente] = useState<Optimizacion | null>(null);
 
   const [nombre, setNombre] = useState('');
   const [punto, setPunto] = useState<Punto | null>(null);
@@ -59,6 +61,11 @@ export default function Home() {
         if (p?.encuesta_completada_en) {
           setPerfil(p); setNombre(p.nombre ?? '');
           setEstado(await miEstado());
+          // Revisión del periodo: si tu última despensa guardada no tiene revisión, se pregunta al volver.
+          leerHistorial().then((h) => {
+            const ultima = h.optimizaciones[0];
+            if (ultima && !h.revisiones.some((r) => r.optimizacion_id === ultima.id)) setPendiente(ultima);
+          }).catch(() => undefined);
           setHistorial(['ubicacion']);
         } else setHistorial(['nombre']);
       } catch (e) {
@@ -73,17 +80,21 @@ export default function Home() {
   const atras = () => setHistorial((h) => (h.length > 1 ? h.slice(0, -1) : h));
   const totalDelTicket = () => totalTicket ?? (items.reduce((a, i) => a + (i.precioTicket ?? 0), 0) || null);
 
-  /** Calcula la despensa final (con recorte si ni lo más barato cabe) y muestra resultados. */
+  /**
+   * Muestra resultados con la lista COMPLETA. Nunca se recortan cantidades en automático:
+   * si el presupuesto no alcanza, Resultados lo advierte y propone un ajuste que el usuario decide aplicar.
+   */
   const resolver = (prio: Prioridad, presu: number | null) => {
     if (!cat) return;
     setPrioridad(prio); setPresupuesto(presu);
-    let fin = { items, recortes: [] as Recorte[] };
-    if (presu != null) {
-      const barato = evaluar(cat, items, null, 'precio').sort((a, b) => a.faltantes.length - b.faltantes.length || a.total - b.total)[0];
-      if (barato && barato.total > presu) fin = recortarAPresupuesto(cat, items, barato.tiendas, presu);
-    }
-    setFinal(fin);
+    setFinal({ items, recortes: [] });
     ir('resultados');
+  };
+
+  /** Ajuste a presupuesto aceptado por el usuario: la lista cambia para TODAS las comparaciones (sigue siendo justa). */
+  const aplicarAjuste = (tiendas: string[]) => {
+    if (!cat || presupuesto == null) return;
+    setFinal(recortarAPresupuesto(cat, items, tiendas as Parameters<typeof recortarAPresupuesto>[2], presupuesto));
   };
 
   const reiniciar = () => {
@@ -99,6 +110,18 @@ export default function Home() {
       catch (e) { setAviso(`No pudimos guardar tu perfil: ${e instanceof Error ? e.message : String(e)}`); }
     }
     ir('propuesta');
+  };
+
+  /** Siguiente despensa desde una anterior. Plus: cantidades ajustadas con la revisión (prevención de desperdicio). */
+  const nuevaListaDesde = (o: Optimizacion, r: Revision | null) => {
+    if (!cat) return;
+    const plus = estado?.plan === 'plus';
+    const ajuste = plus && r ? ajustarPorRevision(cat, o.items, r) : { items: o.items, cambios: [] as string[] };
+    setItems(ajuste.items.map((i) => ({ productoId: i.productoId, cantidad: i.cantidad })));
+    setNota(!plus && r && (r.agotados.length || r.sobrantes.length || r.desperdiciados.length)
+      ? ['Con Plus ajustaríamos estas cantidades con tu revisión (más de lo que se acabó, menos de lo que sobró o se tiró).'] : ajuste.cambios);
+    setObjetivo(null); setTotalTicket(null);
+    setHistorial(punto ? ['modo', 'lista'] : ['ubicacion']);
   };
 
   const idx = ORDEN.indexOf(paso);
@@ -122,6 +145,12 @@ export default function Home() {
           onPlus={async () => { if (uid) { try { setEstado(await cambiarPlanDemo('plus')); } catch (e) { setAviso(String(e)); } } ir('ubicacion'); }} />
       )}
       {paso === 'ubicacion' && <PasoUbicacion nombre={nombre} onListo={(p) => { setPunto(p); ir('modo'); }} />}
+      {paso === 'modo' && cat && uid && pendiente && (
+        <div className="mb-4">
+          <RevisionRapida uid={uid} cat={cat} opt={pendiente} plus={estado?.plan === 'plus'}
+            onListo={(r, armar) => { const o = pendiente; setPendiente(null); if (armar) nuevaListaDesde(o, r); }} />
+        </div>
+      )}
       {paso === 'modo' && <PasoModo nombre={nombre} onListo={(m) => ir(m)} />}
 
       {!cat && ['lista', 'ticket', 'revisar', 'encuesta'].includes(paso) && !errorCat && <p className="text-muted">Cargando precios…</p>}
@@ -162,6 +191,7 @@ export default function Home() {
         <Resultados cat={cat} nombre={nombre} items={final.items} presupuesto={presupuesto} prioridad={prioridad} punto={punto}
           totalTicket={objetivo ? totalDelTicket() : null} recortes={final.recortes}
           origen={objetivo ? 'ticket' : 'lista'} uid={uid} perfil={perfil} setPerfil={setPerfil} estado={estado} setEstado={setEstado}
+          onAplicarAjuste={aplicarAjuste} notaAjustes={nota}
           onVerValor={() => ir('mivalor')} precioAnalisis={planes.find((p) => p.id === 'gratis')?.precio_analisis_mxn}
           onReiniciar={reiniciar} onEditar={() => setHistorial((h) => h.slice(0, h.lastIndexOf(objetivo ? 'revisar' : 'lista') + 1))} />
       )}
@@ -169,12 +199,7 @@ export default function Home() {
       {cat && paso === 'mivalor' && uid && (
         <MiValor uid={uid} cat={cat} planes={planes} estado={estado} setEstado={setEstado}
           onEditarPerfil={() => ir('encuesta')}
-          onNuevaLista={(o, r) => {
-            const ajuste = r ? ajustarPorRevision(cat, o.items, r) : { items: o.items, cambios: [] };
-            setItems(ajuste.items.map((i) => ({ productoId: i.productoId, cantidad: i.cantidad })));
-            setNota(ajuste.cambios); setObjetivo(null); setTotalTicket(null);
-            setHistorial(punto ? ['modo', 'lista'] : ['ubicacion']);
-          }}
+          onNuevaLista={(o, r) => nuevaListaDesde(o, r)}
           onBorrado={() => { setPerfil(null); setEstado(null); setUid(null); setNombre(''); setHistorial(['cargando']); location.reload(); }} />
       )}
     </main>

@@ -64,3 +64,63 @@ test('tips: primero los de tu lista, con números del catálogo; nunca se repite
   assert.equal(new Set(ids).size, pool.length);
   assert.equal(siguienteTip(pool, vistos).vistos.length, 1); // reinicia al agotar
 });
+
+test('comparación justa: un producto sin precio NO cuenta como ahorro', async () => {
+  const { compararCubiertos } = await import('../src/lib/impacto.ts');
+  const filas = [
+    { productoId: 'leche', nombre: 'Leche', ref_mxn: 70, opt_mxn: 40, ref_kg: 6.3, opt_kg: 6.3 },
+    { productoId: 'fresa', nombre: 'Fresa', ref_mxn: 69.95, opt_mxn: null, ref_kg: 0.8, opt_kg: null }, // sin precio en línea
+    { productoId: 'huevo', nombre: 'Huevo', ref_mxn: null, opt_mxn: 32, ref_kg: null, opt_kg: null },  // sin referencia
+  ];
+  const c = compararCubiertos(filas);
+  assert.deepEqual([c.ref, c.opt, c.ahorro, c.comparables], [70, 40, 30, 1]);
+  assert.deepEqual(c.excluidos, ['Fresa', 'Huevo']);
+  assert.deepEqual([c.refKg, c.optKg], [6.3, 6.3]);
+});
+
+test('distribución del presupuesto por categoría, sobrante y faltante', async () => {
+  const { distribuirPresupuesto } = await import('../src/lib/impacto.ts');
+  const cat2 = { ...cat, productos: cat.productos.map((p) => ({ ...p, categoria: p.id === 'res' ? 'Carnes' : 'Lácteos' })) };
+  const plan = armarPlan(cat2, [{ productoId: 'res', cantidad: 0.5 }, { productoId: 'leche', cantidad: 2 }], ['heb', 'walmart'], null, 'precio');
+  const d = distribuirPresupuesto(cat2, plan, 200);
+  assert.equal(d.total, 152);
+  assert.deepEqual(d.categorias.map((c) => [c.categoria, c.total, c.pct]), [['Carnes', 112, 74], ['Lácteos', 40, 26]]);
+  assert.deepEqual([d.sobrante, d.falta], [48, null]);
+  assert.deepEqual([distribuirPresupuesto(cat2, plan, 100).falta, distribuirPresupuesto(cat2, plan, null).sobrante], [52, null]);
+});
+
+test('Gratis vs Plus con los mismos datos: Plus nunca sale peor y el extra es medible', async () => {
+  const { compararCubiertos } = await import('../src/lib/impacto.ts');
+  const { evaluar } = await import('../src/lib/optimizar.ts');
+  // leche más barata en Walmart, res solo en H-E-B: lo básico (una tienda) no puede tener ambas baratas
+  const items = [{ productoId: 'res', cantidad: 0.5 }, { productoId: 'leche', cantidad: 2 }];
+  const basico = evaluar(cat, items, null, 'precio').filter((p) => p.tiendas.length === 1).sort((a, b) => a.faltantes.length - b.faltantes.length || a.total - b.total)[0];
+  const plus = evaluar(cat, items, null, 'precio')[0];
+  const c = compararCubiertos(desglose(cat, items, basico, plus, [], false));
+  assert.deepEqual(basico.tiendas, ['heb']);           // res 112 + leche 2×30 = 172
+  assert.deepEqual(plus.tiendas.sort(), ['heb', 'walmart']); // res 112 + leche 2×20 = 152
+  assert.deepEqual([c.ref, c.opt, c.ahorro, c.comparables], [172, 152, 20, 2]);
+});
+
+test('compra incompleta: un producto que no se puede comprar NO es ahorro', async () => {
+  const { compararCubiertos } = await import('../src/lib/impacto.ts');
+  const cat2 = { ...cat, productos: [...cat.productos, { id: 'fresa', nombre: 'Fresa', categoria: 'x', unidad: 'kg', sinonimos: [], huella_kgco2e: 1.53, huella_fuente: 'OWID' }] };
+  const ticket = [{ productoId: 'leche', cantidad: 2, precioTicket: 70 }, { productoId: 'fresa', cantidad: 0.45, precioTicket: 69.95 }];
+  const opt = armarPlan(cat2, ticket, ['heb', 'walmart'], null, 'precio');
+  assert.equal(opt.faltantes[0].id, 'fresa');
+  const c = compararCubiertos(desglose(cat2, ticket, null, opt, [], true));
+  assert.equal(c.ahorro, 30);                 // 70 → 40 en leche; la fresa no suma $69.95 de "ahorro"
+  assert.deepEqual(c.excluidos, ['Fresa']);
+});
+
+test('ajuste a presupuesto: la comparación usa la misma lista ajustada en ambos lados', async () => {
+  const { compararCubiertos } = await import('../src/lib/impacto.ts');
+  const { recortarAPresupuesto } = await import('../src/lib/optimizar.ts');
+  const items = [{ productoId: 'leche', cantidad: 4 }];
+  const ajuste = recortarAPresupuesto(cat, items, ['walmart'], 50);            // 4 L × $20 = 80 > 50 → 2 L
+  assert.equal(ajuste.items[0].cantidad, 2);
+  const ref = armarPlan(cat, ajuste.items, ['heb'], null, 'precio');            // súper habitual, misma lista ajustada
+  const opt = armarPlan(cat, ajuste.items, ['walmart'], null, 'precio');
+  const c = compararCubiertos(desglose(cat, ajuste.items, ref, opt, [], false));
+  assert.deepEqual([c.ref, c.opt, c.ahorro], [60, 40, 20]);                     // no 80 → 40
+});

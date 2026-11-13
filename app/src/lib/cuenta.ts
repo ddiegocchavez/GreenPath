@@ -11,6 +11,7 @@ export type Optimizacion = {
   presupuesto: number | null; prioridad: string | null; referencia_tipo: string; referencia_detalle: string | null;
   total_referencia: number | null; total_optimizado: number; co2e_referencia: number | null; co2e_optimizado: number | null;
   tiendas: string[]; gasto_real: number | null; pagado_demo_mxn: number | null; detalle: FilaDetalle[] | null;
+  ahorro_adicional_plus: number | null; productos_excluidos: string[];
 };
 export type Movimiento = { id: number; creado_en: string; tipo: string; cantidad: number; detalle: string | null };
 export type RevisionGuardada = Revision & { id: string; optimizacion_id: string | null; creada_en: string; costo_desperdicio: number | null };
@@ -89,7 +90,7 @@ export async function historial(): Promise<{ optimizaciones: Optimizacion[]; mov
   return {
     optimizaciones: (o.data ?? []).map((x) => ({
       ...x, presupuesto: num(x.presupuesto), total_referencia: num(x.total_referencia), total_optimizado: Number(x.total_optimizado),
-      co2e_referencia: num(x.co2e_referencia), co2e_optimizado: num(x.co2e_optimizado), gasto_real: num(x.gasto_real), pagado_demo_mxn: num(x.pagado_demo_mxn),
+      co2e_referencia: num(x.co2e_referencia), co2e_optimizado: num(x.co2e_optimizado), gasto_real: num(x.gasto_real), pagado_demo_mxn: num(x.pagado_demo_mxn), ahorro_adicional_plus: num(x.ahorro_adicional_plus),
     })),
     movimientos: m.data ?? [],
     revisiones: (r.data ?? []).map((x) => ({ ...x, costo_desperdicio: num(x.costo_desperdicio) })),

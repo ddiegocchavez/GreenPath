@@ -64,6 +64,9 @@ export function MiValor({ uid, cat, planes, estado, setEstado, onEditarPerfil, o
   const meses = estado?.plan === 'plus' ? MESES_DEMO(estado.plan_desde) : 0;
   const costoPlus = meses * (plus?.precio_mxn ?? 99);
   const pagosAnalisis = opts.reduce((a, o) => a + (o.pagado_demo_mxn ?? 0), 0);
+  const conPlus = opts.filter((o) => o.ahorro_adicional_plus != null);
+  const extraPlus = conPlus.reduce((a, o) => a + (o.ahorro_adicional_plus ?? 0), 0);
+  const excluidos = opts.reduce((a, o) => a + (o.productos_excluidos?.length ?? 0), 0);
   const costo = costoPlus + pagosAnalisis;
   const co2Ref = opts.reduce((a, o) => a + (o.co2e_referencia ?? 0), 0);
   const co2Opt = opts.reduce((a, o) => a + (o.co2e_optimizado ?? 0), 0);
@@ -107,7 +110,8 @@ export function MiValor({ uid, cat, planes, estado, setEstado, onEditarPerfil, o
           <div className="grid grid-cols-1 gap-2">
             <Dato titulo="Gasto de referencia" valor={pesos(ref)} t="estimado" nota="Tu ticket o tu súper habitual, con la misma lista." />
             <Dato titulo="Costo optimizado" valor={pesos(optTot)} t="estimado" />
-            <Dato titulo="Ahorro potencial" valor={pesos(potencial)} t="estimado" nota="Si compras lo recomendado a los precios consultados." />
+            <Dato titulo="Ahorro potencial" valor={pesos(potencial)} t="estimado" nota={`Si compras lo recomendado a los precios consultados. Solo productos con precio en ambas listas${excluidos ? ` (${excluidos} sin comparar)` : ""}.`} />
+            {conPlus.length > 0 && <Dato titulo="Ahorro adicional encontrado por Plus" valor={pesos(extraPlus)} t="estimado" nota={`Frente al modelo básico con la misma lista y precios, en ${conPlus.length} optimización(es) Plus.`} />}
             <Dato titulo="Ahorro comprobado" valor={comprobadas.length ? pesos(comprobado) : 'Sin datos'} t="comprobado"
               nota={comprobadas.length ? `Pagaste ${pesos(gastoReal)} en ${comprobadas.length} compra(s) registradas.` : 'Registra lo que pagaste en una optimización.'} />
             <Dato titulo="Dinero perdido por desperdicio" valor={revs.length ? pesos(desperdicio) : 'Sin datos'} t="tuyo" />

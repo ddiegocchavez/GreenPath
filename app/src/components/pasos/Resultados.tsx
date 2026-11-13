@@ -3,9 +3,9 @@
 import { useMemo, useState } from 'react';
 import { actualizarAlternativas, cambiarPlanDemo, guardarOptimizacion, type Estado } from '@/lib/cuenta';
 import { mapsUrl, masCercana } from '@/lib/geo';
-import { armarPlan, etiquetaTiendas, evaluar, evaluarAlternativas, type Plan, type Recorte } from '@/lib/optimizar';
+import { armarPlan, etiquetaTiendas, evaluar, evaluarAlternativas, recortarAPresupuesto, type Plan, type Recorte } from '@/lib/optimizar';
 import { ALTERNATIVAS, alternativasPara, aplicarAlternativas, aplicarPreferencias, comprasPorMes, type Perfil } from '@/lib/perfil';
-import { desglose, siguienteTip, tipsPara, type Tip } from '@/lib/impacto';
+import { compararCubiertos, desglose, distribuirPresupuesto, siguienteTip, tipsPara, type Tip } from '@/lib/impacto';
 import type { Catalogo, Item, Prioridad, Punto, TiendaId } from '@/lib/tipos';
 import { InsigniaP, InsigniaS, nombreCalidad, pesos } from '../ui';
 
@@ -16,6 +16,7 @@ export function Resultados(props: {
   totalTicket: number | null; recortes: Recorte[]; onReiniciar: () => void; onEditar: () => void;
   origen: 'lista' | 'ticket'; uid: string | null; perfil: Perfil | null; setPerfil: (p: Perfil) => void;
   estado: Estado | null; setEstado: (e: Estado) => void; onVerValor: () => void; precioAnalisis?: number | null;
+  onAplicarAjuste?: (tiendas: TiendaId[]) => void; notaAjustes?: string[];
 }) {
   const { nombre, presupuesto, prioridad, punto, totalTicket, recortes, perfil, estado } = props;
   const [orden, setOrden] = useState<'asc' | 'desc'>('asc');
@@ -54,8 +55,11 @@ export function Resultados(props: {
   // combinar tiendas + la mejor alternativa ganar-ganar por producto + prioridad y presupuesto.
   const mejoresGG = [...new Map(ganaGana.map((e) => [e.de, e] as const)).values()];
   const vistaPlus = !completo ? evaluar(cat, aplicarAlternativas(pref.items, mejoresGG.map((e) => e.id)), presupuesto, prioridad, dist)[0] ?? null : null;
-  const extraMxn = vistaPlus && mejor ? Math.round((mejor.total - vistaPlus.total) * 100) / 100 : 0;
-  const extraKg = vistaPlus && mejor?.huellaKg != null && vistaPlus.huellaKg != null ? Math.round((mejor.huellaKg - vistaPlus.huellaKg) * 10) / 10 : 0;
+  // Diferencia Gratis → Plus SOLO con productos cubiertos en ambos (nunca cuenta un hueco como ahorro).
+  const compVista = vistaPlus && mejor
+    ? compararCubiertos(desglose(cat, pref.items, mejor, vistaPlus, mejoresGG.map((e) => ({ de: e.de, a: e.a })), false)) : null;
+  const extraMxn = compVista ? compVista.ahorro : 0;
+  const extraKg = compVista?.refKg != null && compVista.optKg != null ? Math.round((compVista.refKg - compVista.optKg) * 10) / 10 : 0;
   const comprasMes = perfil ? comprasPorMes(perfil) : null;
   const activarPlus = async () => {
     if (!props.uid) { props.onVerValor(); return; }
@@ -72,8 +76,22 @@ export function Resultados(props: {
   })();
 
   if (!mejor) return null;
-  const ahorro = ref ? ref.total - mejor.total : null;
   const clave = (p: Plan) => p.tiendas.join('+');
+
+  // Comparación justa contra la referencia: mismos productos, misma cantidad, solo los cubiertos en ambas listas.
+  const cambiosAceptados = ALTERNATIVAS.filter((a) => completo && aceptadas.includes(a.id)).map((a) => ({ de: a.de, a: a.a }));
+  const filas = desglose(cat, pref.items, ref?.tipo === 'ticket' ? null : ref?.plan ?? null, mejor, cambiosAceptados, ref?.tipo === 'ticket');
+  const comp = ref ? compararCubiertos(filas) : null;
+  const ahorro = comp && comp.comparables > 0 ? comp.ahorro : null;
+
+  // Plus vs Gratis con los MISMOS datos: el modelo básico sobre la lista original contra el resultado de Plus.
+  const basico = evaluar(cat, pref.items, presupuesto, 'precio', dist).filter((p) => p.tiendas.length === 1)[0] ?? null;
+  const vsBasico = completo && basico ? compararCubiertos(desglose(cat, pref.items, basico, mejor, cambiosAceptados, false)) : null;
+  const dist$ = completo ? distribuirPresupuesto(cat, mejor, presupuesto) : null;
+
+  // Presupuesto insuficiente: se advierte y se PROPONE un ajuste; solo se aplica si el usuario lo acepta.
+  const noAlcanza = presupuesto != null && mejor.total > presupuesto + 0.005 && recortes.length === 0;
+  const sugerido = noAlcanza ? recortarAPresupuesto(cat, items, mejor.tiendas, presupuesto) : null;
 
   const decidirAlternativa = async (id: string, acepta: boolean) => {
     if (!perfil || !props.uid) return;
@@ -93,10 +111,12 @@ export function Resultados(props: {
       const r = await guardarOptimizacion({
         origen: props.origen, items, presupuesto, prioridad: completo ? prioridad : 'precio',
         referencia_tipo: ref?.tipo ?? 'sin_referencia', referencia_detalle: ref?.detalle ?? null,
-        total_referencia: ref?.total ?? null, total_optimizado: mejor.total,
-        co2e_referencia: ref?.plan.huellaKg ?? null, co2e_optimizado: mejor.huellaKg ?? null, tiendas: mejor.tiendas,
-        detalle: desglose(cat, pref.items, ref?.tipo === 'ticket' ? null : ref?.plan ?? null, mejor,
-          ALTERNATIVAS.filter((a) => completo && aceptadas.includes(a.id)).map((a) => ({ de: a.de, a: a.a })), ref?.tipo === 'ticket'),
+        // Solo productos cubiertos en ambas listas: un faltante nunca se guarda como ahorro.
+        total_referencia: comp && comp.comparables > 0 ? comp.ref : null,
+        total_optimizado: comp && comp.comparables > 0 ? comp.opt : mejor.total,
+        co2e_referencia: comp?.refKg ?? null, co2e_optimizado: comp ? comp.optKg : mejor.huellaKg ?? null, tiendas: mejor.tiendas,
+        detalle: filas, productos_excluidos: comp?.excluidos ?? [],
+        ahorro_adicional_plus: vsBasico && vsBasico.comparables > 0 ? vsBasico.ahorro : null,
         ...(completo ? { modo: 'plus' as const } : {}),
       }, idem, !completo);
       props.setEstado({ plan: r.plan, saldo: r.saldo, usadas_ciclo: r.usadas_ciclo, ciclo: r.ciclo, plan_desde: r.plan_desde });
@@ -122,11 +142,12 @@ export function Resultados(props: {
             {mejor.dentroPresupuesto ? `Dentro de tu presupuesto (te sobran ${pesos(presupuesto - mejor.total)})` : `Se pasa ${pesos(mejor.total - presupuesto)} de tu presupuesto`}
           </p>
         )}
-        {ahorro != null && ref && (
+        {ahorro != null && ref && comp && (
           <p className="mt-1 text-lg font-extrabold text-sun">
             {Math.abs(ahorro) < 0.5 ? `Igual que ${ref.tipo === 'ticket' ? 'tu ticket' : `comprar todo en ${ref.detalle}`}`
               : ahorro > 0 ? `Ahorro potencial: ${pesos(ahorro)} vs ${ref.tipo === 'ticket' ? 'tu ticket' : ref.detalle}`
               : `Cuesta ${pesos(-ahorro)} más que ${ref.tipo === 'ticket' ? 'tu ticket' : ref.detalle}`}
+            {comp.excluidos.length > 0 && <span className="block text-xs font-bold text-sprout">Comparando {comp.comparables} productos con precio en ambas listas</span>}
           </p>
         )}
         <p className="mt-1 text-xs text-sprout">{completo ? `Modelo avanzado (Plus) · prioridad ${prioridad}` : 'Modelo básico (Gratis): la tienda más barata para toda tu lista'}</p>
@@ -145,16 +166,88 @@ export function Resultados(props: {
         {abierto === clave(mejor) && (desbloqueado ? <Detalle cat={cat} plan={mejor} oscuro /> : <Bloqueado precio={precioAnalisis} oscuro />)}
       </section>
 
+      {noAlcanza && presupuesto != null && (
+        <section className="card border-2 border-alert/40">
+          <p className="font-extrabold text-alert">⚠️ Tu presupuesto no alcanza para tu lista completa</p>
+          <p className="mt-1 text-sm">Lo más barato que encontramos para <b>toda</b> tu lista cuesta {pesos(mejor.total)}: te faltan <b>{pesos(mejor.total - presupuesto)}</b>. No quitamos nada por ti.</p>
+          {sugerido && sugerido.recortes.length > 0 && (
+            <>
+              <p className="mt-2 text-sm font-bold text-forest">Si quieres caber en {pesos(presupuesto)}, esto es lo que tendrías que comprar de menos:</p>
+              <ul className="mt-1 space-y-1 text-sm">
+                {sugerido.recortes.map((r) => (
+                  <li key={r.producto.id}>• {r.producto.nombre}: {+r.antes.toFixed(2)} → {r.despues > 0 ? `${+r.despues.toFixed(2)} ${UNIDAD[r.producto.unidad]}` : 'no comprarlo'}</li>
+                ))}
+              </ul>
+              {props.onAplicarAjuste && (
+                <button className="mt-2 rounded-full border border-alert bg-white px-4 py-2 text-sm font-bold text-alert" onClick={() => props.onAplicarAjuste?.(mejor.tiendas)}>
+                  Aplicar este ajuste (compraré menos)
+                </button>
+              )}
+              <p className="mt-1 text-xs text-muted">Comprar menos no es ahorro: si lo aplicas, la comparación usa la lista reducida en ambos lados.</p>
+            </>
+          )}
+        </section>
+      )}
+
       {recortes.length > 0 && (
         <section className="card">
-          <p className="font-extrabold text-forest">Para entrar en tu presupuesto ajustamos:</p>
+          <p className="font-extrabold text-forest">Ajustaste tu lista a tu presupuesto</p>
           <ul className="mt-2 space-y-1">
             {recortes.map((r) => (
               <li key={r.producto.id}>
-                {r.producto.nombre}: {+r.antes.toFixed(2)} → {r.despues > 0 ? `${+r.despues.toFixed(2)} ${UNIDAD[r.producto.unidad]}` : 'lo quitamos'}
+                {r.producto.nombre}: {+r.antes.toFixed(2)} → {r.despues > 0 ? `${+r.despues.toFixed(2)} ${UNIDAD[r.producto.unidad]}` : 'no se compra'}
               </li>
             ))}
           </ul>
+          <p className="mt-1 text-xs text-muted">Todas las comparaciones usan esta misma lista ajustada; la diferencia por comprar menos no se cuenta como ahorro.</p>
+        </section>
+      )}
+
+      {/* Plus: valor medible con los mismos datos */}
+      {completo && vsBasico && vsBasico.comparables > 0 && (
+        <section className="card border-2 border-leaf">
+          <p className="text-sm font-black uppercase tracking-wide text-leaf">Lo que te dio Plus en esta compra</p>
+          <div className="mt-2 grid grid-cols-3 gap-2 text-center text-sm">
+            <span />
+            <span className="font-bold text-muted">Modelo básico</span>
+            <span className="font-bold text-leaf">Plus</span>
+            <span className="text-left font-bold">Costo</span><span>{pesos(vsBasico.ref)}</span><span className="font-black text-forest">{pesos(vsBasico.opt)}</span>
+            <span className="text-left font-bold">CO₂e</span><span>{vsBasico.refKg != null ? `${vsBasico.refKg} kg` : '—'}</span><span className="text-forest">{vsBasico.optKg != null ? `${vsBasico.optKg} kg` : '—'}</span>
+          </div>
+          <p className="mt-2 text-sm">
+            {vsBasico.ahorro >= 0.5 ? <>Ahorro adicional por Plus: <b className="text-leaf">{pesos(vsBasico.ahorro)}</b></> : <>Con esta lista Plus no encontró ahorro extra en pesos{vsBasico.ahorro < -0.5 ? ` (subió calidad o sustentabilidad por ${pesos(-vsBasico.ahorro)})` : ''}</>}
+            {vsBasico.refKg != null && vsBasico.optKg != null && vsBasico.refKg - vsBasico.optKg > 0.05 && <> · <b className="text-leaf">−{(vsBasico.refKg - vsBasico.optKg).toFixed(1)} kg CO₂e</b></>}
+          </p>
+          <p className="mt-1 text-xs text-muted">Misma lista ({vsBasico.comparables} productos) y mismos precios: lo básico es la tienda más barata para todo; Plus combina tiendas{cambiosAceptados.length ? ' y aplica tus alternativas' : ''}.</p>
+        </section>
+      )}
+
+      {completo && dist$ && (
+        <section className="card">
+          <p className="font-extrabold text-forest">Distribución de tu presupuesto</p>
+          <ul className="mt-2 space-y-2">
+            {dist$.categorias.map((c) => (
+              <li key={c.categoria} title={`${c.categoria}: ${pesos(c.total)} (${c.pct} %)`}>
+                <div className="flex justify-between text-sm"><span>{c.categoria}</span><span className="font-bold">{pesos(c.total)} · {c.pct} %</span></div>
+                <div className="mt-1 h-2.5 rounded-r bg-mist" aria-hidden><div className="h-full rounded-r-[4px] bg-leaf" style={{ width: `${Math.max(2, c.pct)}%` }} /></div>
+              </li>
+            ))}
+          </ul>
+          {dist$.sobrante != null && dist$.sobrante >= 1 && (
+            <p className="mt-2 rounded-2xl bg-mint p-3 text-sm text-forest">
+              Te sobran <b>{pesos(dist$.sobrante)}</b> de tu presupuesto.
+              {perfil?.problemas.includes('se_terminan') ? ' Como algunos productos se te terminan antes de tiempo, guárdalos para reponer a mitad de periodo en lugar de comprar de más hoy.' : ' Puedes guardarlos o subir calidad con la prioridad «Calidad».'}
+            </p>
+          )}
+          {dist$.falta != null && <p className="mt-2 text-sm font-bold text-alert">Te faltan {pesos(dist$.falta)} para la lista completa.</p>}
+        </section>
+      )}
+
+      {completo && (props.notaAjustes?.length ?? 0) > 0 && (
+        <section className="card">
+          <p className="font-extrabold text-forest">Prevención de desperdicio</p>
+          <p className="text-sm text-muted">Ajustamos cantidades con tu revisión del periodo anterior:</p>
+          <ul className="mt-1 space-y-1 text-sm">{props.notaAjustes!.map((n) => <li key={n}>• {n}</li>)}</ul>
         </section>
       )}
 
@@ -208,15 +301,16 @@ export function Resultados(props: {
               <span className="font-bold text-muted">{ref.tipo === 'ticket' ? 'Tu ticket' : `Todo en ${ref.detalle}`}</span>
               <span className="font-bold text-leaf">Optimizada</span>
               <span className="text-left font-bold">Costo</span>
-              <span className="font-black">{pesos(ref.total)}</span>
-              <span className="font-black text-forest">{pesos(mejor.total)}</span>
+              <span className="font-black">{comp ? pesos(comp.ref) : '—'}</span>
+              <span className="font-black text-forest">{comp ? pesos(comp.opt) : '—'}</span>
               <span className="text-left font-bold">CO₂e</span>
-              <span>{ref.plan.huellaKg != null ? `${ref.plan.huellaKg} kg` : '—'}</span>
-              <span className="text-forest">{mejor.huellaKg != null ? `${mejor.huellaKg} kg` : '—'}</span>
+              <span>{comp?.refKg != null ? `${comp.refKg} kg` : '—'}</span>
+              <span className="text-forest">{comp?.optKg != null ? `${comp.optKg} kg` : '—'}</span>
             </div>
             <p className="mt-2 text-sm">
-              Diferencia: <b>{pesos(ref.total - mejor.total)}</b>
-              {ref.plan.huellaKg != null && mejor.huellaKg != null && <> · <b>{(ref.plan.huellaKg - mejor.huellaKg).toFixed(1)} kg CO₂e</b></>}
+              Diferencia: <b>{comp ? pesos(comp.ahorro) : '—'}</b>
+              {comp?.refKg != null && comp.optKg != null && <> · <b>{(comp.refKg - comp.optKg).toFixed(1)} kg CO₂e</b></>}
+              {comp && comp.excluidos.length > 0 && <span className="block text-xs text-muted">No se comparan (sin precio en una de las dos listas): {comp.excluidos.join(', ')}.</span>}
             </p>
             {completo && aceptadas.length > 0 && (
               <p className="mt-1 text-sm font-bold text-pine">
