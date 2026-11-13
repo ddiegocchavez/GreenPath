@@ -82,7 +82,7 @@ Hackatón Monterrey · entrega **13-nov-2026 09:00 (CDMX)**.
 | Web móvil en vez de app Android | No hay APK que compilar, se abre con un link y usa la cámara del teléfono. |
 | Precios capturados a mano en las tiendas en línea | Las tiendas tienen protección anti-bots que no vamos a saltar, y la demo no puede depender de que una página responda en vivo. |
 | OCR gratis en el navegador (Tesseract.js) | El usuario no quiso API de IA. La foto no sale del teléfono. Se agregó una pantalla de revisión porque el OCR se equivoca (leyó "606G" en vez de "60G"). |
-| Sin cuentas ni datos personales en el servidor | El nombre, la lista y el ticket viven solo en memoria del navegador. |
+| ~~Sin cuentas ni datos personales en el servidor~~ → cuenta anónima (13-nov) | Historial, créditos y plan necesitan servidor. Sin correo ni pago; RLS por usuario; borrar todo desde la app. El ticket sigue sin subirse. |
 | P1–P4 y S1–S4 por reglas explícitas | Reproducible y explicable. Cada oferta guarda el motivo de su nivel (ver `data/README.md`). |
 | Costco incluido con aviso | Requiere membresía y en línea solo vende abarrotes en paquetes grandes. |
 
