@@ -203,7 +203,7 @@ export function Resultados(props: {
       {evaluadas.length > 0 && (
         <section className="card border-leaf bg-mint">
           <p className="font-extrabold text-forest">🌱 Alternativas equivalentes</p>
-          {ganaGana.length > 0 && <p className="mt-1 text-sm font-bold text-pine">{ganaGana.length} {ganaGana.length === 1 ? 'cambio baja' : 'cambios bajan'} tu costo y tus emisiones a la vez.</p>}
+          {ganaGana.length > 0 && <p className="mt-1 text-sm font-bold text-pine">Encontramos {ganaGana.length} {ganaGana.length === 1 ? 'cambio que baja' : 'cambios que bajan'} tu costo y tus emisiones a la vez{mostrables.length < evaluadas.length ? '; te mostramos los mejores por producto' : ''}.</p>}
           {([['gana_gana', '💚 Ahorras y reduces CO₂e'], ['menor_huella', '🌍 Reducen CO₂e (cuestan más)']] as const).map(([tipo, titulo]) => {
             const lista = mostrables.filter((e) => e.tipo === tipo);
             if (!lista.length) return null;
