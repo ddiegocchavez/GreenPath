@@ -16,7 +16,7 @@
 | Nivel | Regla (según el título o la marca) |
 |---|---|
 | P1 Premium | Dice "orgánico". |
-| P2 Superior | Atributo de valor declarado: libre pastoreo/jaula, selecto, premium, gourmet, artesano, griego, sirloin, supreme, extra virgen, albacora, basmati. |
+| P2 Superior | Atributo de valor declarado: libre pastoreo/jaula, selecto/seleccionado, premium, gourmet, artesano, griego, sirloin, supreme, extra virgen, albacora, basmati. |
 | P3 Estándar | Marca reconocida sin atributos extra (incluye las marcas propias estándar: HEB, Kirkland, Marketside). |
 | P4 Económica | Marca propia básica: Great Value, Aurrera, HCF, Mi Tienda. |
 
@@ -33,6 +33,18 @@ Huella por tipo de alimento: Poore & Nemecek (2018), *Science*, vía [Our World 
 - **Abarrotes y granos:** café 28.53, aceite de soya 6.32, arroz 4.45, azúcar de caña 3.20, avena 2.48, maíz 1.70, trigo 1.57.
 - **Leguminosas y verduras:** leguminosas 1.79, cebolla 0.50, papa 0.46.
 
-Atún, aguacate, yogurt, papel y detergente no tienen factor: se muestran sin huella.
+Desde la captura del 13-nov también: jamón y salchicha de pavo usan el factor de aves (9.87), harina de maíz y de trigo usan maíz (1.70) y trigo (1.57), y la bebida de avena usa el de leche de avena (0.9 por litro).
+
+No tienen factor y se muestran sin huella:
+- **Alimentos:** atún, aguacate, yogurt, crema, mantequilla, mayonesa, puré, consomé, galletas y cereal.
+- **Hogar:** papel y limpieza.
+
+## Capturas
+| Archivo | Productos | Ofertas |
+|---|---|---|
+| `2026-11-12.tsv` | 22 base | 160 |
+| `2026-11-13.tsv` | +17 nuevos, más deslactosadas y Cottonelle | 93 |
+
+`productos.mjs` es la lista de productos genéricos con sus sinónimos. El generador la usa, y también las pruebas del lector de ticket.
 
 Son clasificaciones de GreenPath a partir de lo que dice cada producto, no pruebas de laboratorio.

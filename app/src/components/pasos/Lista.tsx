@@ -9,8 +9,9 @@ import { pesos, Titulo } from '../ui';
 const UNIDAD = { pza: 'pzas', kg: 'kg', l: 'L' } as const;
 const PASO = { pza: 6, kg: 0.5, l: 1 } as const;
 
-export function EditorItems({ cat, items, setItems, conPrecio = false }: {
+export function EditorItems({ cat, items, setItems, conPrecio = false, alCorregir }: {
   cat: Catalogo; items: Item[]; setItems: (x: Item[]) => void; conPrecio?: boolean;
+  alCorregir?: (item: Item, nuevoProductoId: string) => void;
 }) {
   const [q, setQ] = useState('');
   const sugerencias = useMemo(() => {
@@ -51,9 +52,14 @@ export function EditorItems({ cat, items, setItems, conPrecio = false }: {
           return (
             <li key={it.productoId} className="card !p-3">
               <div className="flex items-center gap-2">
-                <div className="flex-1">
-                  <p className="font-extrabold text-forest">{p.nombre}</p>
-                  {it.textoTicket && <p className="text-xs text-muted">Ticket: “{it.textoTicket}”</p>}
+                <div className="min-w-0 flex-1">
+                  {alCorregir && it.textoTicket ? (
+                    <select aria-label="Producto" value={p.id} onChange={(e) => alCorregir(it, e.target.value)}
+                      className="max-w-full rounded-lg border border-mint bg-white font-extrabold text-forest">
+                      {cat.productos.map((x) => <option key={x.id} value={x.id}>{x.nombre}</option>)}
+                    </select>
+                  ) : <p className="font-extrabold text-forest">{p.nombre}</p>}
+                  {it.textoTicket && <p className="truncate text-xs text-muted">Ticket: “{it.textoTicket}”</p>}
                 </div>
                 <button aria-label="Menos" className="h-9 w-9 rounded-full bg-mint font-black" onClick={() => cambiar(it.productoId, { cantidad: Math.max(paso, +(it.cantidad - paso).toFixed(3)) })}>−</button>
                 <span className="w-16 text-center font-bold">{+it.cantidad.toFixed(2)} {UNIDAD[p.unidad]}</span>

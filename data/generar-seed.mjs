@@ -1,12 +1,12 @@
 // Genera la migración con el catálogo: tiendas, sucursales (OSM), productos y ofertas clasificadas.
 // Uso: node data/generar-seed.mjs > supabase/migrations/<timestamp>_datos_catalogo.sql
-import { readFileSync } from 'node:fs';
+import { readdirSync, readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { OWID, productos } from './productos.mjs';
 
 const here = dirname(fileURLToPath(import.meta.url));
 const CAPTURA = '2026-11-12';
-const OWID = 'Poore & Nemecek (2018), vía Our World in Data: emisiones de GEI por kg de alimento';
 
 const tiendas = [
   ['walmart', 'Walmart', 'https://www.walmart.com.mx', false, 'Precio en línea de walmart.com.mx; en tienda puede variar.', (q) => `https://www.walmart.com.mx/search?q=${q}`],
@@ -14,36 +14,12 @@ const tiendas = [
   ['costco', 'Costco', 'https://www.costco.com.mx', true, 'Requiere membresía. En línea solo hay abarrotes en presentaciones grandes.', (q) => `https://www.costco.com.mx/search?text=${q}`],
 ];
 
-// id, nombre, categoría, unidad, sinónimos (lista escrita / OCR), huella kg CO2e/kg (null = sin factor), término de búsqueda usado
-const productos = [
-  ['huevo', 'Huevo', 'Huevo y lácteos', 'pza', ['huevo', 'huevos', 'blanquillos'], 4.67, 'huevo blanco'],
-  ['leche', 'Leche entera', 'Huevo y lácteos', 'l', ['leche'], 3.15, 'leche entera'],
-  ['queso', 'Queso panela', 'Huevo y lácteos', 'kg', ['queso', 'panela'], 23.88, 'queso panela'],
-  ['yogurt', 'Yogurt natural', 'Huevo y lácteos', 'kg', ['yogurt', 'yoghurt', 'yogur'], null, 'yogurt natural'],
-  ['tortilla', 'Tortilla de maíz', 'Granos y cereales', 'kg', ['tortilla', 'tortillas'], 1.70, 'tortilla de maiz'],
-  ['arroz', 'Arroz', 'Granos y cereales', 'kg', ['arroz'], 4.45, 'arroz'],
-  ['pan', 'Pan de caja', 'Granos y cereales', 'kg', ['pan', 'pan de caja', 'pan blanco', 'bimbo'], 1.57, 'pan blanco'],
-  ['sopa', 'Pasta para sopa', 'Granos y cereales', 'kg', ['sopa', 'pasta', 'fideo', 'spaghetti', 'codo'], 1.57, 'sopa de pasta'],
-  ['avena', 'Avena en hojuelas', 'Granos y cereales', 'kg', ['avena'], 2.48, 'avena'],
-  ['frijol', 'Frijol', 'Leguminosas', 'kg', ['frijol', 'frijoles'], 1.79, 'frijol pinto'],
-  ['lentejas', 'Lentejas', 'Leguminosas', 'kg', ['lenteja', 'lentejas'], 1.79, 'lentejas'],
-  ['pollo', 'Pechuga de pollo', 'Carnes y pescado', 'kg', ['pollo', 'pechuga'], 9.87, 'pechuga de pollo'],
-  ['res', 'Carne molida de res', 'Carnes y pescado', 'kg', ['res', 'molida', 'carne molida', 'carne'], 99.48, 'carne molida de res'],
-  ['atun', 'Atún en agua', 'Carnes y pescado', 'kg', ['atun', 'atún'], null, 'atun en agua'],
-  ['cebolla', 'Cebolla', 'Frutas y verduras', 'kg', ['cebolla'], 0.50, 'cebolla blanca'],
-  ['papa', 'Papa', 'Frutas y verduras', 'kg', ['papa', 'papas'], 0.46, 'papa'],
-  ['aguacate', 'Aguacate', 'Frutas y verduras', 'kg', ['aguacate'], null, 'aguacate hass'],
-  ['aceite', 'Aceite comestible', 'Abarrotes', 'l', ['aceite'], 6.32, 'aceite vegetal'],
-  ['azucar', 'Azúcar', 'Abarrotes', 'kg', ['azucar', 'azúcar'], 3.20, 'azucar'],
-  ['cafe', 'Café soluble', 'Abarrotes', 'kg', ['cafe', 'café', 'nescafe'], 28.53, 'cafe soluble'],
-  ['papel', 'Papel higiénico', 'Hogar', 'pza', ['papel', 'papel higienico', 'higienico'], null, 'papel higienico'],
-  ['detergente', 'Detergente en polvo', 'Hogar', 'kg', ['detergente', 'jabon en polvo'], null, 'detergente en polvo'],
-];
+
 
 // ---- Reglas de clasificación (documentadas en data/README.md) ----
 const ORGANICO = /org[aá]nic/i;
 const ATRIBUTO_SUST = /libre (de )?(pastoreo|jaula)|agroecol|biodegradable|nacional/i;
-const PREMIUM = /libre (de )?(pastoreo|jaula)|selec(ta|to|cionado)|premium|gourmet|artesano|griego|sirloin|supreme|extra virgen|albacora|basmati|24 kilates/i;
+const PREMIUM = /libre (de )?(pastoreo|jaula)|selecto|seleccionado|premium|gourmet|artesano|griego|sirloin|supreme|extra virgen|albacora|basmati|24 kilates/i;
 const MARCA_ECONOMICA = /^(Great Value|Aurrera|HCF|Mi Tienda)$/i;
 const MARCA_PROPIA = /^(Great Value|Aurrera|HCF|Mi Tienda|HEB|Marketside|Kirkland Signature)$/i;
 
@@ -79,15 +55,16 @@ out.push(productos.map(([id, n, c, u, sin, h]) =>
 
 const prodById = Object.fromEntries(productos.map((p) => [p[0], p]));
 const tiendaById = Object.fromEntries(tiendas.map((t) => [t[0], t]));
-const filas = readFileSync(join(here, 'capturas', `${CAPTURA}.tsv`), 'utf8').trim().split(/\r?\n/).slice(1).map((l) => l.split('\t'));
-const ofertas = filas.map(([producto, tienda, titulo, marca, cantidad, precio]) => {
+const filas = readdirSync(join(here, 'capturas')).filter((f) => f.endsWith('.tsv')).sort().flatMap((f) =>
+  readFileSync(join(here, 'capturas', f), 'utf8').trim().split(/\r?\n/).slice(1).map((l) => [...l.split('\t'), f.slice(0, 10)]));
+const ofertas = filas.map(([producto, tienda, titulo, marca, cantidad, precio, fecha]) => {
   const p = prodById[producto];
   if (!p) throw new Error(`Producto desconocido: ${producto}`);
   const [cal, calM] = calidad(titulo, marca);
   const [sus, susM] = sustentabilidad(titulo, p[5]);
   const url = tiendaById[tienda][5](encodeURIComponent(p[6]));
   const propia = !!marca && MARCA_PROPIA.test(marca);
-  return `(${q(producto)}, ${q(tienda)}, ${q(titulo)}, ${q(marca)}, ${propia}, ${Number(cantidad)}, ${Number(precio)}, ${cal}, ${q(calM)}, ${sus}, ${q(susM)}, ${q(url)}, '${CAPTURA}')`;
+  return `(${q(producto)}, ${q(tienda)}, ${q(titulo)}, ${q(marca)}, ${propia}, ${Number(cantidad)}, ${Number(precio)}, ${cal}, ${q(calM)}, ${sus}, ${q(susM)}, ${q(url)}, '${fecha}')`;
 });
 out.push('insert into public.ofertas (producto_id, tienda_id, titulo, marca, marca_propia, cantidad, precio, calidad, calidad_motivo, sustentabilidad, sustentabilidad_motivo, url, consultado_el) values');
 out.push(ofertas.join(',\n') + ';');

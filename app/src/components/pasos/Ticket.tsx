@@ -2,7 +2,7 @@
 /** Foto del ticket → OCR (en el teléfono) → revisión editable → qué quiere hacer el usuario. */
 import { useState } from 'react';
 import { cantidadTipica } from '@/lib/optimizar';
-import { analizarTexto, extraerCantidad, extraerTotal, leerTicket } from '@/lib/ticket';
+import { aprender, analizarTexto, construirIndice, extraerCantidad, extraerPrecio, extraerTotal, leerAprendidas, leerTicket } from '@/lib/ticket';
 import type { Catalogo, Item } from '@/lib/tipos';
 import { Opcion, pesos, Titulo } from '../ui';
 import { EditorItems } from './Lista';
@@ -18,14 +18,14 @@ export function PasoTicket({ cat, onLeido }: { cat: Catalogo; onLeido: (items: I
     setError(null); setAvance(0); setVista(URL.createObjectURL(f));
     try {
       const texto = await leerTicket(f, setAvance);
-      const renglones = analizarTexto(texto, cat.productos);
+      const renglones = analizarTexto(texto, construirIndice(cat.productos, cat.ofertas, leerAprendidas()));
       const items = new Map<string, Item>();
       const sinProducto: string[] = [];
       for (const r of renglones) {
         if (!r.productoId) { if (r.precio != null) sinProducto.push(r.texto); continue; }
         const previo = items.get(r.productoId);
         const unidad = cat.productos.find((p) => p.id === r.productoId)!.unidad;
-        const cant = extraerCantidad(r.texto, unidad) ?? cantidadTipica(cat, r.productoId);
+        const cant = r.unidades * (extraerCantidad(r.texto, unidad) ?? cantidadTipica(cat, r.productoId));
         items.set(r.productoId, previo
           ? { ...previo, cantidad: previo.cantidad + cant, precioTicket: (previo.precioTicket ?? 0) + (r.precio ?? 0) }
           : { productoId: r.productoId, cantidad: cant, precioTicket: r.precio ?? undefined, textoTicket: r.texto });
@@ -69,15 +69,46 @@ export function PasoRevisar({ cat, items, setItems, total, setTotal, noReconocid
   noReconocidos: string[]; onListo: () => void;
 }) {
   const suma = items.reduce((a, i) => a + (i.precioTicket ?? 0), 0);
+  const [pendientes, setPendientes] = useState(noReconocidos);
+
+  /** El usuario dice qué producto es un renglón: se corrige y se recuerda para la próxima. */
+  const corregir = (texto: string, productoId: string, desde?: string) => {
+    aprender(texto, productoId);
+    const base = desde ? items.find((i) => i.productoId === desde) : undefined;
+    const resto = items.filter((i) => i.productoId !== desde && i.productoId !== productoId);
+    const existente = items.find((i) => i.productoId === productoId);
+    const nuevo: Item = {
+      productoId,
+      cantidad: (existente?.cantidad ?? 0) + (extraerCantidad(texto, cat.productos.find((p) => p.id === productoId)!.unidad) ?? cantidadTipica(cat, productoId)),
+      precioTicket: (existente?.precioTicket ?? 0) + (base?.precioTicket ?? extraerPrecio(texto) ?? 0) || undefined,
+      textoTicket: texto,
+    };
+    setItems([...resto, nuevo]);
+  };
+
   return (
     <div className="flex flex-1 flex-col">
-      <Titulo sub="El lector puede equivocarse: corrige, agrega o quita lo que haga falta.">Esto leímos de tu ticket</Titulo>
-      <EditorItems cat={cat} items={items} setItems={setItems} conPrecio />
-      {noReconocidos.length > 0 && (
-        <details className="mt-3 text-sm text-muted">
-          <summary className="cursor-pointer font-bold">{noReconocidos.length} renglones sin producto en nuestro catálogo</summary>
-          <ul className="mt-1 list-disc pl-5">{noReconocidos.slice(0, 12).map((t, i) => <li key={i}>{t}</li>)}</ul>
-        </details>
+      <Titulo sub="El lector puede equivocarse: si un producto no es, cámbialo y GreenPath lo aprende.">Esto leímos de tu ticket</Titulo>
+      <EditorItems cat={cat} items={items} setItems={setItems} conPrecio
+        alCorregir={(it, id) => it.textoTicket && corregir(it.textoTicket, id, it.productoId)} />
+      {pendientes.length > 0 && (
+        <section className="card mt-4 !p-4">
+          <p className="font-extrabold text-forest">¿Qué es esto? ({pendientes.length})</p>
+          <p className="text-sm text-muted">Renglones con precio que no reconocimos. Dinos qué producto es y lo recordaremos.</p>
+          <ul className="mt-2 space-y-2">
+            {pendientes.slice(0, 12).map((t) => (
+              <li key={t} className="flex items-center gap-2 text-sm">
+                <span className="flex-1 font-mono">{t}</span>
+                <select className="rounded-xl border border-mint bg-white px-2 py-1" defaultValue=""
+                  onChange={(e) => { if (e.target.value) { corregir(t, e.target.value); setPendientes(pendientes.filter((x) => x !== t)); } }}>
+                  <option value="">Elegir…</option>
+                  {cat.productos.map((p) => <option key={p.id} value={p.id}>{p.nombre}</option>)}
+                </select>
+                <button className="text-muted" aria-label="Ignorar" onClick={() => setPendientes(pendientes.filter((x) => x !== t))}>✕</button>
+              </li>
+            ))}
+          </ul>
+        </section>
       )}
       <label className="card mt-4 flex items-center justify-between !p-4">
         <span className="font-bold text-forest">Total que pagaste</span>

@@ -3,9 +3,23 @@
 Hackatón Monterrey · entrega **13-nov-2026 09:00 (CDMX)**.
 
 ## Siguiente paso
-1. Publicar en Vercel y probar en un teléfono real: ubicación, cámara y OCR con un ticket de verdad.
-2. Ampliar la captura de precios: frutas y verduras, y más productos.
-3. Preparar el pitch y la demo.
+1. Probar en el teléfono con más tickets reales (Walmart y Costco). Cada ticket nuevo se agrega como caso a `app/tests/ticket-real.test.mjs`.
+2. Preparar el pitch y la demo.
+
+## Lector de ticket v2 (13-nov-2026, madrugada)
+- **El problema:** con el ticket real de H-E-B (foto de Diego), la v1 solo acertó 1 de 2 renglones reconocidos. Leyó "LECHE VEG AVENA OATLY" como *Avena en hojuelas*, porque los tickets no usan el nombre genérico, sino marca y abreviaturas.
+- **La solución:** el lector aprende del catálogo y de las correcciones.
+  - **Catálogo:** cada título capturado sirve de ejemplo de cómo se nombra un producto.
+  - **Peso por palabra:** pesan más las palabras raras (IDF), y aún más si son marca (Oatly → bebida vegetal).
+  - **Abreviaturas:** se reconocen como prefijos ("CLA" → Clara, "VEG" → vegetal, "DESLACTOSAD" → deslactosada).
+  - **Columnas:** lee CANT · PRE.UNIT · TOTAL y solo las usa si cuadran.
+  - **Errores del OCR:** "7506R" se interpreta como "750GR", y renglones de pago como "TUA16%" se descartan.
+  - **Correcciones:** si cambias el producto de un renglón, o asignas uno que no se reconoció, se guarda en el teléfono. La próxima vez ese texto se reconoce directo.
+- **El resultado:** con la salida REAL de Tesseract sobre la foto, reconoce **6/6 artículos con su precio y 0 renglones basura** (prueba automática).
+- **Catálogo ampliado:** 39 productos y 253 ofertas.
+  - Se agregaron harinas, tortilla de harina, cereal, galletas, bebida vegetal, crema, mantequilla, jamón, salchicha, sal, mayonesa, puré, consomé, quitamanchas, lavatrastes y cloro.
+  - También leche deslactosada y Cottonelle.
+- **Publicada:** https://coolproject-henna.vercel.app/ (Vercel, se actualiza con cada push a `main`).
 
 ## Estado (12-nov-2026, noche)
 - ✅ **Nueva idea:** reemplaza la app GreenPath de huella digital (Android).
@@ -41,7 +55,7 @@ Hackatón Monterrey · entrega **13-nov-2026 09:00 (CDMX)**.
 ## Pruebas
 | Prueba | Resultado |
 |---|---|
-| `npm test` (algoritmo y lector de ticket, `app/tests/`) | 9/9 ✅ |
+| `npm test` (algoritmo, lector de ticket y ticket real de H-E-B) | 14/14 ✅ |
 | `tsc --noEmit` y `eslint` | ✅ |
 | Flujo de lista en Chrome (localhost) | ✅ |
 | Flujo de ticket con imagen generada | ✅ OCR correcto salvo "606G" |

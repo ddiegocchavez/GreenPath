@@ -1,0 +1,94 @@
+producto	tienda	titulo	marca	cantidad	precio
+harina_maiz	walmart	Harina de maíz Maseca nixtamalizado 1 kg	Maseca	1	24
+harina_maiz	walmart	Harina de maíz San Blas nixtamalizado 800 g	San Blas	0.8	13.50
+harina_maiz	walmart	Harina precocida PAN maíz blanco 1 kg	PAN	1	50
+harina_maiz	heb	Harina de Maíz 1 kg		1	18
+harina_maiz	heb	Maseca Harina de Maíz Tamal 1 kg	Maseca	1	27
+harina_maiz	heb	Harimasa Harina de Maíz Nixtamalizado Tamal 1 kg	Harimasa	1	20.50
+harina_trigo	walmart	Harina de trigo Great Value 1 kg	Great Value	1	15
+harina_trigo	walmart	Harina de trigo Selecta 1 kg	Selecta	1	20
+harina_trigo	walmart	Harina de trigo La Perla extrafina 1 kg	La Perla	1	18
+harina_trigo	walmart	Harina de trigo Great Value 2 kg	Great Value	2	31
+harina_trigo	heb	Selecta Harina de Trigo Extra Fina 1 kg	Selecta	1	20.90
+harina_trigo	heb	HCF Harina de Trigo Extra Fina 1 kg	HCF	1	21.90
+harina_trigo	heb	La Perla Harina de Trigo Extra Fina 800 g	La Perla	0.8	17
+sal	walmart	Sal La Fina refinada fluorada 1 kg	La Fina	1	33
+sal	walmart	Sal yodada Great Value en grano 1 kg	Great Value	1	15
+sal	walmart	Sal Elefante natural de cocina en grano 1 Kg	Elefante	1	18
+sal	heb	HCF Sal Yodada Fluorurada Refinada 1 kg	HCF	1	26
+sal	heb	Sal Yodada Fluorurada 1 Kg		1	28.90
+mayonesa	walmart	Mayonesa La Costeña con Jugo de Limón de 500g	La Costeña	0.5	45
+mayonesa	walmart	Mayonesa McCormick con limón 390 g	McCormick	0.39	60
+mayonesa	walmart	Mayonesa Great Value con jugo de limón 190 g	Great Value	0.19	25
+mayonesa	heb	HCF Mayonesa Regular 425 g	HCF	0.425	52
+mayonesa	heb	Mayonesa McCormick con Jugo de Limones 507 g	McCormick	0.507	71
+mayonesa	heb	HCF Mayonesa Real 850 g	HCF	0.85	87
+pure_tomate	walmart	Puré de tomate La Costeña sazonado 350 g	La Costeña	0.35	23
+pure_tomate	walmart	Tomates Molidos Del Fuerte Condimentados 345 g	Del Fuerte	0.345	14.50
+pure_tomate	walmart	Tomates molidos Del Fuerte condimentados 1.1 kg	Del Fuerte	1.1	36
+pure_tomate	heb	HCF Pure de Tomate 210 g	HCF	0.21	7
+pure_tomate	heb	Tomates Molidos del Fuerte Condimentados 210 g	Del Fuerte	0.21	11
+pure_tomate	heb	Del Fuerte Tomates Molidos Condimentados 345 g	Del Fuerte	0.345	15
+consome	walmart	Caldo de Pollo Knorr en polvo 130g	Knorr	0.13	21
+consome	walmart	Caldo de Pollo Knorr en polvo 330 g	Knorr	0.33	64
+consome	walmart	Caldo de pollo Knorr en polvo 950 g	Knorr	0.95	145
+consome	heb	Knorr Caldo Sabor Pollo 132 g	Knorr	0.132	23
+galletas	walmart	Galletas Marías 144 g		0.144	22
+galletas	walmart	Galletas Aurrera Marías 432 g	Aurrera	0.432	27.50
+cereal	walmart	Cereal Kellogg's Corn Flakes 385 g	Kellogg's	0.385	58
+cereal	walmart	Cereal Corn Flakes Caja de 530 g		0.53	55
+cereal	walmart	Cereal de maíz Nestlé Corn Flakes amaranto y sabor a miel 420 g	Nestlé	0.42	63
+mantequilla	walmart	Mantequilla Lala sin Sal 90 g	Lala	0.09	24
+mantequilla	walmart	Mantequilla Gloria sin sal en barra 90 g	Gloria	0.09	30
+mantequilla	walmart	Mantequilla Lala sin Sal 4 pzas 90 g c/u	Lala	0.36	92
+mantequilla	heb	Noche Buena Mantequilla Sin Sal 90 g	Noche Buena	0.09	24
+crema	walmart	Crema Ácida Lala Entera 426 ml	Lala	0.426	39
+crema	walmart	Crema ácida Alpura 426 ml	Alpura	0.426	38
+crema	walmart	Crema ácida Alpura regular 900 ml	Alpura	0.9	71
+crema	heb	HCF Crema Acida 426 g	HCF	0.426	41.90
+crema	heb	HCF Crema Acida 900 g	HCF	0.9	83
+crema	heb	Alpura Crema Ácida Regular 426 g	Alpura	0.426	39
+jamon	walmart	Jamón de pavo Bafar 400 g	Bafar	0.4	35
+jamon	walmart	Jamón de pavo Great Value tipo virginia 450 g	Great Value	0.45	67
+jamon	walmart	Jamón de pavo Sabori Parma virginia 250 g	Sabori	0.25	51
+jamon	walmart	Jamón de pavo Sabori Parma virginia premium 400 g	Sabori	0.4	63
+jamon	heb	Zwan Premium Jamón de Pavo Virginia sin Gluten 250 g	Zwan	0.25	51.50
+jamon	heb	San Rafael Jamón Real de Pavo Rebanada Sandwich 250 g	San Rafael	0.25	56
+salchicha	walmart	Salchicha de Pavo Sabori 500 g	Sabori	0.5	48
+salchicha	walmart	Salchicha de pavo San Rafael 750 g	San Rafael	0.75	116
+salchicha	walmart	Salchicha de pavo Great Value 20 pzas en 1 kg	Great Value	1	87
+salchicha	heb	HEB Salchicha de Pavo 500 g	HEB	0.5	51.90
+salchicha	heb	San Rafael Salchicha de Pavo 500 g	San Rafael	0.5	62
+tortilla_harina	walmart	Tortillas de harina Tía Rosa Tortillinas ligeras 306 g	Tía Rosa	0.306	29
+tortilla_harina	walmart	Tortillas de harina Tío Baldo crudas 510 g	Tío Baldo	0.51	45
+tortilla_harina	walmart	Tortillas de harina Great Value 312 g	Great Value	0.312	21
+tortilla_harina	heb	Tio Baldo Tortillas de Harina Cruda 500 g	Tío Baldo	0.5	46
+tortilla_harina	heb	Del Barrio Tortilla de Harina de Trigo 630 g	Del Barrio	0.63	43.90
+leche_vegetal	walmart	Bebida a base de avena Oatly barista sin azúcar añadida 1 l	Oatly	1	62
+leche_vegetal	walmart	Bebida vegetal Nature's Heart con avena linaza 946 ml	Nature's Heart	0.946	45
+leche_vegetal	heb	Oatly Leche de Avena Original 1.89 L	Oatly	1.89	121
+leche_vegetal	heb	Leche Vegetal Avena Barista 1 Lt		1	64
+quitamanchas	walmart	Quitamanchas Oxiclean En Polvo 1.2 kg	OxiClean	1.2	262
+quitamanchas	walmart	Quitamanchas Vanish Oxi Action crystal white en polvo para ropa blanca 900 g	Vanish	0.9	149
+quitamanchas	walmart	Potenciador de lavado Vanish Oxi Action en polvo 240 g	Vanish	0.24	69
+quitamanchas	heb	OxiClean Quitamanchas en Polvo 620 g	OxiClean	0.62	188
+quitamanchas	heb	OxiClean Quitamanchas en Polvo 1.2 kg	OxiClean	1.2	275
+quitamanchas	heb	OxiClean Quitamanchas en Polvo 2 kg	OxiClean	2	318
+lavatrastes	walmart	Lavatrastes Líquido Axion Limón 100% Efectivo Arrancagrasa 1.1 L	Axion	1.1	56
+lavatrastes	walmart	Jabón Líquido para Trastes Salvo Limón 1.2 L	Salvo	1.2	63
+lavatrastes	walmart	Lavatrastes Líquido Axion Limón con Tapa Dosificadora 650 ml	Axion	0.65	45
+lavatrastes	heb	Citrex Lavatrastes Limón 740 ml	Citrex	0.74	51
+lavatrastes	heb	Citrex Lavatrastes Limón 1.2 L	Citrex	1.2	77
+cloro	walmart	Cloro Blanqueador Desinfectante Clorox Original 930ml	Clorox	0.93	20
+cloro	walmart	Blanqueador líquido Cloralex El Rendidor 950 ml	Cloralex	0.95	20
+cloro	walmart	Cloro Aurrera con aroma floral 4 l	Aurrera	4	39
+cloro	walmart	Blanqueador líquido Clorox 5.8 lt	Clorox	5.8	65
+leche	walmart	Leche Alpura deslactosada light 1 l	Alpura	1	31
+leche	walmart	Leche Great Value deslactosada caja con 6 pzas de 1 l c/u	Great Value	6	154
+leche	walmart	Leche Lala UHT deslactosada 3 pzas 1 l c/u	Lala	3	85
+leche	heb	Santa Clara Leche Deslactosada 1 L	Santa Clara	1	36
+leche	heb	HCF Leche Deslactosada 1 L	HCF	1	26
+leche	heb	HEB Sabor Tradicional Leche Deslactosada 1.89 L	HEB	1.89	47
+papel	heb	Papel Higiénico Cottonelle Comfort con 6 Rollos	Cottonelle	6	105
+papel	heb	Papel Higiénico Cottonelle Soft Care con 8 Rollos	Cottonelle	8	108
+papel	heb	Papel Higiénico Regio Ecomax con 12 Rollos	Regio	12	80
