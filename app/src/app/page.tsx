@@ -136,13 +136,15 @@ export default function Home() {
       {paso === 'cargando' && <p className="text-muted">Cargando…</p>}
       {paso === 'nombre' && <PasoNombre inicial={nombre} onListo={(n) => { setNombre(n); if (perfil?.encuesta_completada_en) ir('ubicacion'); else ir('encuesta'); }} />}
       {paso === 'encuesta' && cat && (
-        <Encuesta inicial={perfil ? { ...perfil, nombre } : perfilVacio(nombre)} tiendas={cat.tiendas} onListo={terminarEncuesta}
+        <Encuesta inicial={perfil ? { ...perfil, nombre } : perfilVacio(nombre)} cat={cat} onListo={terminarEncuesta}
           onCancelar={historial.length > 1 ? atras : undefined} />
       )}
-      {paso === 'propuesta' && perfil && (
-        <Propuesta perfil={perfil} planes={planes}
-          onGratis={() => ir('ubicacion')}
-          onPlus={async () => { if (uid) { try { setEstado(await cambiarPlanDemo('plus')); } catch (e) { setAviso(String(e)); } } ir('ubicacion'); }} />
+      {paso === 'propuesta' && perfil && cat && (
+        <Propuesta perfil={perfil} planes={planes} cat={cat}
+          onElegir={async (plan) => {
+            if (uid && (plan !== 'gratis' || estado?.plan !== 'gratis')) { try { setEstado(await cambiarPlanDemo(plan)); } catch (e) { setAviso(String(e)); } }
+            ir('ubicacion');
+          }} />
       )}
       {paso === 'ubicacion' && <PasoUbicacion nombre={nombre} onListo={(p) => { setPunto(p); ir('modo'); }} />}
       {paso === 'modo' && cat && uid && pendiente && (
@@ -162,6 +164,11 @@ export default function Home() {
               <p className="font-extrabold text-forest">Ajustamos tu lista con tu revisión anterior</p>
               <ul className="mt-1 space-y-1">{nota.map((n) => <li key={n}>• {n}</li>)}</ul>
             </section>
+          )}
+          {items.length === 0 && (perfil?.lista_habitual?.length ?? 0) > 0 && (
+            <button className="btn btn-light mb-3" onClick={() => setItems(perfil!.lista_habitual!.map((i) => ({ productoId: i.productoId, cantidad: i.cantidad })))}>
+              Usar mi lista habitual ({perfil!.lista_habitual!.length} productos)
+            </button>
           )}
           <PasoLista cat={cat} items={items} setItems={setItems} onListo={() => ir('presupuesto')} />
         </>
@@ -192,7 +199,7 @@ export default function Home() {
           totalTicket={objetivo ? totalDelTicket() : null} recortes={final.recortes}
           origen={objetivo ? 'ticket' : 'lista'} uid={uid} perfil={perfil} setPerfil={setPerfil} estado={estado} setEstado={setEstado}
           onAplicarAjuste={aplicarAjuste} notaAjustes={nota}
-          onVerValor={() => ir('mivalor')} precioAnalisis={planes.find((p) => p.id === 'gratis')?.precio_analisis_mxn}
+          onVerValor={() => ir('mivalor')} planesConfig={planes}
           onReiniciar={reiniciar} onEditar={() => setHistorial((h) => h.slice(0, h.lastIndexOf(objetivo ? 'revisar' : 'lista') + 1))} />
       )}
 

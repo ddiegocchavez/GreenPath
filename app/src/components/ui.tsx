@@ -5,7 +5,7 @@ import { useState, type ReactNode } from 'react';
 export const pesos = (n: number) => n.toLocaleString('es-MX', { style: 'currency', currency: 'MXN' });
 
 export function Encabezado({ paso, total, onAtras, onMiValor, plan, onCerrarSesion }: {
-  paso?: number; total?: number; onAtras?: () => void; onMiValor?: () => void; plan?: 'gratis' | 'plus'; onCerrarSesion?: () => void;
+  paso?: number; total?: number; onAtras?: () => void; onMiValor?: () => void; plan?: 'gratis' | 'flex' | 'plus'; onCerrarSesion?: () => void;
 }) {
   return (
     <>
@@ -15,7 +15,7 @@ export function Encabezado({ paso, total, onAtras, onMiValor, plan, onCerrarSesi
         <button onClick={onAtras} className="rounded-full bg-white px-3 py-1 font-bold text-forest border border-mint" aria-label="Atrás">←</button>
       ) : <span className="text-2xl" aria-hidden>🌿</span>}
       <span className="text-xl font-black text-forest">GreenPath</span>
-      {plan === 'plus' && <span className="rounded-full bg-sun/40 px-2 py-0.5 text-xs font-black text-forest">PLUS</span>}
+      {(plan === 'plus' || plan === 'flex') && <span className="rounded-full bg-sun/40 px-2 py-0.5 text-xs font-black text-forest">{plan.toUpperCase()}</span>}
       <div className="ml-auto flex items-center gap-2">
         {paso && total ? (
           <div className="h-3 w-20 overflow-hidden rounded-full bg-mint" aria-label={`Paso ${paso} de ${total}`}>

@@ -124,3 +124,19 @@ test('ajuste a presupuesto: la comparación usa la misma lista ajustada en ambos
   const c = compararCubiertos(desglose(cat, ajuste.items, ref, opt, [], false));
   assert.deepEqual([c.ref, c.opt, c.ahorro], [60, 40, 20]);                     // no 80 → 40
 });
+
+test('equivalencia de despensas: ambas listas cubren los mismos productos con al menos la cantidad pedida', async () => {
+  const { evaluar } = await import('../src/lib/optimizar.ts');
+  const items = [{ productoId: 'res', cantidad: 0.7 }, { productoId: 'leche', cantidad: 3 }, { productoId: 'huevo', cantidad: 18 }];
+  const planes = evaluar(cat, items, null, 'precio');
+  const basico = planes.filter((p) => p.tiendas.length === 1).sort((a, b) => a.faltantes.length - b.faltantes.length || a.total - b.total)[0];
+  const avanzado = planes[0];
+  for (const plan of [basico, avanzado]) {
+    for (const e of plan.elecciones) assert.ok(e.paquetes * e.oferta.cantidad >= e.item.cantidad, `${e.producto.id} cubre lo pedido`);
+  }
+  // Solo se comparan productos presentes en ambas; lo que falta en una no es ahorro.
+  const filas = desglose(cat, items, basico, avanzado, [], false);
+  for (const f of filas.filter((x) => x.ref_mxn != null && x.opt_mxn != null)) {
+    assert.ok(basico.elecciones.some((e) => e.producto.id === f.productoId) && avanzado.elecciones.some((e) => e.producto.id === f.productoId));
+  }
+});

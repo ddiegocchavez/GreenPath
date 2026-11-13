@@ -28,16 +28,50 @@ test('diagnóstico: resumen, problema principal y sin cifras inventadas', () => 
   assert.ok(!d.oportunidades.join(' ').match(/\$\d/), 'las oportunidades no traen montos');
 });
 
-test('plan: Plus solo con compras frecuentes, costo ≤ 5 % y problemas de planeación', () => {
-  const plus = recomendarPlan({ ...base, frecuencia: 'semanal', frecuencia_dias: 7, gasto_por_despensa: 1200, problemas: ['se_terminan'] });
-  assert.equal(plus.plan, 'plus');
-  assert.ok(plus.costoPctGasto <= 5);
-  assert.equal(recomendarPlan({ ...base, frecuencia: 'semanal', frecuencia_dias: 7, gasto_por_despensa: 1200, problemas: ['huella'] }).plan, 'gratis');
-  assert.equal(recomendarPlan({ ...base, frecuencia: 'semanal', frecuencia_dias: 7, gasto_por_despensa: 300, problemas: ['se_terminan'] }).plan, 'gratis');
-  assert.equal(recomendarPlan({ ...base, problemas: ['se_terminan'] }).plan, 'analisis_individual');
-  assert.equal(recomendarPlan({ ...base, gasto_por_despensa: null }).plan, 'gratis');
-  assert.equal(recomendarPlan({ ...base, uso: 'evento' }).plan, 'eventos');
-  assert.equal(recomendarPlan({ ...base, uso: 'negocio' }).plan, 'negocios');
+const PLANES = [
+  { id: 'gratis', precio_mxn: 0, optimizaciones_incluidas: 0, tipo: 'gratis' },
+  { id: 'individual', precio_mxn: 29, optimizaciones_incluidas: 1, tipo: 'pago_unico' },
+  { id: 'flex', precio_mxn: 59, optimizaciones_incluidas: 2, tipo: 'suscripcion' },
+  { id: 'plus', precio_mxn: 99, optimizaciones_incluidas: 4, tipo: 'suscripcion' },
+];
+const semanal = { ...base, frecuencia: 'semanal', frecuencia_dias: 7 };     // 4.3 compras/mes
+const quincenal = { ...base, frecuencia: 'quincenal', frecuencia_dias: 15 }; // 2 compras/mes
+const op = (r, id) => r.opciones.find((o) => o.id === id);
+
+test('plan: sin datos verificables (sin lista) → Gratis, nunca pagar a ciegas', () => {
+  const r = recomendarPlan(semanal, PLANES, null);
+  assert.equal(r.plan, 'gratis');
+  assert.equal(op(r, 'plus').ahorroExtraMes, null);
+  assert.equal(recomendarPlan(semanal, PLANES, { mxn: 50, kg: 1, comparables: 0 }).plan, 'gratis');
+});
+
+test('plan: despensa mensual estable → Individual o Gratis, nunca suscripción', () => {
+  const r = recomendarPlan(base, PLANES, { mxn: 80, kg: 10, comparables: 5 }); // ahorra 80 > 29
+  assert.equal(r.plan, 'individual');
+  assert.equal(op(r, 'individual').beneficioNeto, 51);
+  assert.equal(op(r, 'plus').aplica, false);
+  assert.equal(recomendarPlan(base, PLANES, { mxn: 20, kg: 1, comparables: 5 }).plan, 'gratis'); // 20 < 29
+});
+
+test('plan: quincenal compara Individual vs Flex por beneficio neto (precios configurables)', () => {
+  const r = recomendarPlan(quincenal, PLANES, { mxn: 40, kg: 5, comparables: 6 }); // 2 análisis × $40 = $80
+  assert.deepEqual([op(r, 'individual').beneficioNeto, op(r, 'flex').beneficioNeto, op(r, 'plus').beneficioNeto], [22, 21, -19]);
+  // Con $29 / $59, dos Individuales ($58) cuestan menos que Flex ($59): Flex nunca gana y no se recomienda.
+  assert.equal(r.plan, 'individual');
+  // Si Flex se configura a $49, ya conviene más que pagar dos Individuales.
+  const conFlex49 = PLANES.map((p) => (p.id === 'flex' ? { ...p, precio_mxn: 49 } : p));
+  assert.equal(recomendarPlan(quincenal, conFlex49, { mxn: 40, kg: 5, comparables: 6 }).plan, 'flex');
+});
+
+test('plan: semanal con ahorro alto → Plus; con ahorro bajo → Gratis', () => {
+  const r = recomendarPlan(semanal, PLANES, { mxn: 60, kg: 8, comparables: 6 });
+  // individual 4.3×(60−29)=133.3 · flex 120−59=61 · plus 4×60−99=141 → Plus
+  assert.equal(r.plan, 'plus');
+  assert.equal(op(r, 'plus').beneficioNeto, 141);
+  assert.equal(op(r, 'plus').co2Mes, 32);
+  assert.equal(recomendarPlan(semanal, PLANES, { mxn: 10, kg: 1, comparables: 6 }).plan, 'gratis');
+  assert.equal(recomendarPlan({ ...base, uso: 'evento' }, PLANES, null).plan, 'eventos');
+  assert.equal(recomendarPlan({ ...base, uso: 'negocio' }, PLANES, null).plan, 'negocios');
 });
 
 const P = (id, unidad, huella = null) => ({ id, nombre: id, categoria: 'x', unidad, sinonimos: [id], huella_kgco2e: huella, huella_fuente: huella ? 'OWID' : null });

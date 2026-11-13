@@ -5,16 +5,17 @@ import {
   DIAS, NO_CAMBIAR, PROBLEMAS, RESTRICCIONES,
   type Frecuencia, type NoCambiar, type Perfil, type Problema, type Restriccion, type Uso,
 } from '@/lib/perfil';
-import type { Tienda } from '@/lib/tipos';
+import type { Catalogo } from '@/lib/tipos';
+import { EditorItems } from '../pasos/Lista';
 import { Opcion, Titulo } from '../ui';
 
-type Paso = 'uso' | 'personas' | 'frecuencia' | 'gasto' | 'problemas' | 'no_cambiar';
-const PASOS_HOGAR: Paso[] = ['uso', 'personas', 'frecuencia', 'gasto', 'problemas', 'no_cambiar'];
+type Paso = 'uso' | 'personas' | 'frecuencia' | 'gasto' | 'lista' | 'problemas' | 'no_cambiar';
+const PASOS_HOGAR: Paso[] = ['uso', 'personas', 'frecuencia', 'gasto', 'lista', 'problemas', 'no_cambiar'];
 
 export const perfilVacio = (nombre: string): Perfil => ({
   nombre, uso: 'hogar', personas: 2, frecuencia: 'semanal', frecuencia_dias: 7, gasto_por_despensa: null,
   problemas: [], no_cambiar: [], no_cambiar_detalle: null, restricciones: [], supermercados: [],
-  alternativas_aceptadas: [], alternativas_rechazadas: [],
+  alternativas_aceptadas: [], alternativas_rechazadas: [], lista_habitual: [],
 });
 
 function Chip({ activo, children, onClick }: { activo: boolean; children: React.ReactNode; onClick: () => void }) {
@@ -28,8 +29,8 @@ function Chip({ activo, children, onClick }: { activo: boolean; children: React.
 
 const alternar = <T,>(xs: T[], x: T) => (xs.includes(x) ? xs.filter((y) => y !== x) : [...xs, x]);
 
-export function Encuesta({ inicial, tiendas, onListo, onCancelar }: {
-  inicial: Perfil; tiendas: Tienda[]; onListo: (p: Perfil) => void; onCancelar?: () => void;
+export function Encuesta({ inicial, cat, onListo, onCancelar }: {
+  inicial: Perfil; cat: Catalogo; onListo: (p: Perfil) => void; onCancelar?: () => void;
 }) {
   const [p, setP] = useState<Perfil>(inicial);
   const [i, setI] = useState(0);
@@ -110,6 +111,17 @@ export function Encuesta({ inicial, tiendas, onListo, onCancelar }: {
         </form>
       )}
 
+      {paso === 'lista' && (
+        <div className="flex flex-1 flex-col">
+          <Titulo sub="Opcional, pero con ella calculamos con precios reales qué plan te conviene (o si ninguno).">¿Qué compras normalmente?</Titulo>
+          <EditorItems cat={cat} items={p.lista_habitual ?? []} setItems={(x) => set({ lista_habitual: x })} />
+          <div className="mt-auto space-y-3 pt-6">
+            <button className="btn btn-primary" onClick={() => siguiente()} disabled={!(p.lista_habitual ?? []).length}>Continuar ({(p.lista_habitual ?? []).length})</button>
+            <button className="btn btn-light" onClick={() => siguiente({ lista_habitual: [] })}>Omitir</button>
+          </div>
+        </div>
+      )}
+
       {paso === 'problemas' && (
         <div className="flex flex-1 flex-col gap-2">
           <Titulo sub="Elige todos los que apliquen.">¿Qué problemas tienes con tu despensa?</Titulo>
@@ -135,7 +147,7 @@ export function Encuesta({ inicial, tiendas, onListo, onCancelar }: {
               )}
               {k === 'supermercados' && p.no_cambiar.includes(k) && (
                 <div className="mt-2 flex flex-wrap gap-2 pl-2">
-                  {tiendas.map((t) => (
+                  {cat.tiendas.map((t) => (
                     <Chip key={t.id} activo={p.supermercados.includes(t.id)} onClick={() => set({ supermercados: alternar(p.supermercados, t.id) })}>{t.nombre}</Chip>
                   ))}
                 </div>

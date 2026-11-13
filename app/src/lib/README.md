@@ -15,3 +15,4 @@
 - `ticket.ts` — OCR en el navegador (Tesseract.js) y lector que aprende del catálogo (IDF, marcas, abreviaturas) y de tus correcciones. Lee columnas y total.
 - `geo.ts` — distancia y sucursal más cercana.
 - `impacto.ts` — desglose por producto de cada despensa, acumulado para el dashboard y tips de CO₂ con fuente que rotan.
+- `valor.ts` — ahorro adicional verificable del análisis completo vs el básico para una lista (usado para recomendar plan).

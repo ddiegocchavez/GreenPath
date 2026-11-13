@@ -4,10 +4,12 @@ import type { Perfil, Revision } from './perfil';
 import type { FilaDetalle } from './impacto';
 import type { Item } from './tipos';
 
-export type Estado = { plan: 'gratis' | 'plus'; saldo: number; usadas_ciclo: number; ciclo: string; plan_desde?: string | null };
-export type Plan = { id: 'gratis' | 'plus'; nombre: string; precio_mxn: number; optimizaciones_incluidas: number; umbral_compensacion_mxn: number | null; precio_analisis_mxn: number | null };
+export type Suscripcion = 'gratis' | 'flex' | 'plus';
+export type Modo = 'gratis' | 'individual' | 'flex' | 'plus';
+export type Estado = { plan: Suscripcion; saldo: number; usadas_ciclo: number; ciclo: string; plan_desde?: string | null };
+export type Plan = { id: 'gratis' | 'individual' | 'flex' | 'plus'; nombre: string; precio_mxn: number; optimizaciones_incluidas: number; umbral_compensacion_mxn: number | null; precio_analisis_mxn: number | null; tipo: 'gratis' | 'pago_unico' | 'suscripcion' };
 export type Optimizacion = {
-  id: string; creada_en: string; modo: 'gratis' | 'plus'; origen: 'lista' | 'ticket'; items: Item[];
+  id: string; creada_en: string; modo: Modo; origen: 'lista' | 'ticket'; items: Item[];
   presupuesto: number | null; prioridad: string | null; referencia_tipo: string; referencia_detalle: string | null;
   total_referencia: number | null; total_optimizado: number; co2e_referencia: number | null; co2e_optimizado: number | null;
   tiendas: string[]; gasto_real: number | null; pagado_demo_mxn: number | null; detalle: FilaDetalle[] | null;
@@ -39,7 +41,7 @@ export async function guardarPerfil(uid: string, p: Perfil) {
     user_id: uid, nombre: p.nombre, uso: p.uso, personas: p.personas, frecuencia: p.frecuencia, frecuencia_dias: p.frecuencia_dias,
     gasto_por_despensa: p.gasto_por_despensa, problemas: p.problemas, no_cambiar: p.no_cambiar, no_cambiar_detalle: p.no_cambiar_detalle,
     restricciones: p.restricciones, supermercados: p.supermercados, alternativas_aceptadas: p.alternativas_aceptadas,
-    alternativas_rechazadas: p.alternativas_rechazadas, encuesta_completada_en: p.encuesta_completada_en ?? new Date().toISOString(),
+    alternativas_rechazadas: p.alternativas_rechazadas, lista_habitual: p.lista_habitual ?? [], encuesta_completada_en: p.encuesta_completada_en ?? new Date().toISOString(),
   };
   const existe = await sb().from('perfiles').select('user_id').eq('user_id', uid).maybeSingle();
   const r = existe.data
@@ -65,15 +67,15 @@ export async function miEstado(): Promise<Estado> {
   return data as Estado;
 }
 
-export async function cambiarPlanDemo(plan: 'gratis' | 'plus'): Promise<Estado> {
+export async function cambiarPlanDemo(plan: Suscripcion): Promise<Estado> {
   const { data, error } = await sb().rpc('cambiar_plan_demo', { p_plan: plan });
   if (error) throw new Error(error.message);
   return data as Estado;
 }
 
-export type NuevaOptimizacion = Omit<Optimizacion, 'id' | 'creada_en' | 'modo' | 'gasto_real' | 'pagado_demo_mxn'> & { modo?: 'plus' };
+export type NuevaOptimizacion = Omit<Optimizacion, 'id' | 'creada_en' | 'modo' | 'gasto_real' | 'pagado_demo_mxn'> & { modo?: 'avanzado' };
 /** En Gratis requiere pagoDemo = true (pago por análisis en modo demostración, sin cobro real). */
-export async function guardarOptimizacion(o: NuevaOptimizacion, idem: string, pagoDemo = false): Promise<{ id: string; repetida: boolean; modo: 'gratis' | 'plus' } & Estado> {
+export async function guardarOptimizacion(o: NuevaOptimizacion, idem: string, pagoDemo = false): Promise<{ id: string; repetida: boolean; modo: Modo } & Estado> {
   const { data, error } = await sb().rpc('guardar_optimizacion', { p: o, p_idem: idem, p_pago_demo: pagoDemo });
   if (error) throw new Error(error.message);
   return data;

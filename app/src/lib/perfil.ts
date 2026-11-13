@@ -26,7 +26,8 @@ export type Perfil = {
   supermercados: string[];
   alternativas_aceptadas: string[];
   alternativas_rechazadas: string[];
-  plan?: 'gratis' | 'plus';
+  lista_habitual?: Item[];
+  plan?: 'gratis' | 'flex' | 'plus';
   encuesta_completada_en?: string | null;
 };
 
@@ -56,7 +57,6 @@ const OPORTUNIDAD: Record<Problema, string> = {
   huella: 'Estimar la huella de tu lista con fuente científica y proponer alternativas de menor impacto.',
 };
 const ORDEN_PROBLEMAS: Problema[] = ['se_terminan', 'desperdicio', 'gasto_mas', 'distribuir', 'ahorrar_calidad', 'huella'];
-const PLANEACION: Problema[] = ['se_terminan', 'desperdicio', 'gasto_mas', 'distribuir'];
 
 export const comprasPorMes = (p: Pick<Perfil, 'frecuencia_dias'>) => Math.round((30 / p.frecuencia_dias) * 10) / 10;
 export const gastoMensual = (p: Pick<Perfil, 'gasto_por_despensa' | 'frecuencia_dias'>) =>
@@ -99,39 +99,70 @@ export function diagnosticar(p: Perfil): Diagnostico {
   };
 }
 
-export type PlanSugerido = 'gratis' | 'plus' | 'analisis_individual' | 'eventos' | 'negocios';
-export type Recomendacion = { plan: PlanSugerido; razones: string[]; costoPctGasto: number | null };
+export type PlanId = 'gratis' | 'individual' | 'flex' | 'plus';
+export type PlanSugerido = PlanId | 'eventos' | 'negocios';
+export type PlanConfig = { id: PlanId; nombre?: string; precio_mxn: number; optimizaciones_incluidas: number; tipo: 'gratis' | 'pago_unico' | 'suscripcion' };
+/** Ahorro adicional del modelo avanzado frente al básico en UNA compra (lista habitual, precios reales, productos cubiertos). */
+export type ExtraPorAnalisis = { mxn: number; kg: number | null; comparables: number } | null;
+export type OpcionPlan = {
+  id: PlanId; costoMes: number; analisisMes: number;
+  ahorroExtraMes: number | null; beneficioNeto: number | null; co2Mes: number | null;
+  aplica: boolean; motivo?: string;
+};
+export type Recomendacion = { plan: PlanSugerido; razones: string[]; opciones: OpcionPlan[] };
 
-/** Umbral: Plus solo se sugiere si su precio es ≤ 5 % del gasto mensual declarado (y hay uso frecuente). */
-export const UMBRAL_PCT_PLUS = 5;
+const r2 = (n: number) => Math.round(n * 100) / 100;
 
-export function recomendarPlan(p: Perfil, precioPlus = 99, incluidas = 4): Recomendacion {
-  if (p.uso === 'evento') return { plan: 'eventos', razones: ['Un análisis de evento (presupuesto, cantidades, desperdicio y CO₂e) se paga por evento; no necesitas suscripción.'], costoPctGasto: null };
-  if (p.uso === 'negocio') return { plan: 'negocios', razones: ['Los negocios necesitan inventario, proveedores y reportes; ese plan está en preparación.'], costoPctGasto: null };
+/**
+ * Recomienda el plan con mayor BENEFICIO NETO mensual verificable:
+ *   ahorro adicional por análisis (modelo avanzado − básico, con tu lista y precios reales) × análisis que usarías − costo.
+ * - Despensa mensual estable (≤ 1 compra/mes): solo Gratis o Individual; nunca una suscripción innecesaria.
+ * - Sin datos verificables (sin lista) o sin beneficio positivo: Gratis.
+ */
+export function recomendarPlan(p: Perfil, planes: PlanConfig[], extra: ExtraPorAnalisis): Recomendacion {
+  if (p.uso === 'evento') return { plan: 'eventos', razones: ['Un análisis de evento (presupuesto, cantidades, desperdicio y CO₂e) se paga por evento; no necesitas suscripción.'], opciones: [] };
+  if (p.uso === 'negocio') return { plan: 'negocios', razones: ['Los negocios necesitan inventario, proveedores y reportes; ese plan está en preparación.'], opciones: [] };
 
-  const gm = gastoMensual(p);
-  const cm = comprasPorMes(p);
-  if (!gm) return { plan: 'gratis', razones: ['Sin tu gasto mensual no podemos saber si Plus te conviene. Empieza gratis y decide con datos.'], costoPctGasto: null };
+  const n = comprasPorMes(p);
+  const estable = n <= 1;
+  const conDatos = !!extra && extra.comparables > 0;
+  const opciones: OpcionPlan[] = (['individual', 'flex', 'plus'] as PlanId[]).flatMap((id) => {
+    const cfg = planes.find((x) => x.id === id);
+    if (!cfg) return [];
+    const analisisMes = cfg.tipo === 'pago_unico' ? n : Math.min(cfg.optimizaciones_incluidas, n);
+    const costoMes = r2(cfg.tipo === 'pago_unico' ? cfg.precio_mxn * analisisMes : cfg.precio_mxn);
+    const ahorroExtraMes = conDatos ? r2(extra!.mxn * analisisMes) : null;
+    const aplica = !(estable && cfg.tipo === 'suscripcion');
+    return [{
+      id, costoMes, analisisMes, ahorroExtraMes,
+      beneficioNeto: ahorroExtraMes == null ? null : r2(ahorroExtraMes - costoMes),
+      co2Mes: conDatos && extra!.kg != null ? Math.round(extra!.kg * analisisMes * 10) / 10 : null,
+      aplica, motivo: aplica ? undefined : 'Compras una vez al mes: no necesitas una suscripción.',
+    }];
+  });
 
-  const pct = Math.round((precioPlus / gm) * 1000) / 10;
-  const planeacion = p.problemas.some((x) => PLANEACION.includes(x));
   const razones: string[] = [];
-
-  if (cm >= 2 && pct <= UMBRAL_PCT_PLUS && planeacion) {
-    razones.push(cm <= incluidas
-      ? `Haces ≈ ${cm} compras al mes: las ${incluidas} optimizaciones de Plus alcanzan para todas.`
-      : `Haces ≈ ${cm} compras al mes: Plus incluye ${incluidas} optimizaciones completas; las demás pueden usar el plan Gratis o créditos.`);
-    razones.push(`Plus cuesta ${pesos(precioPlus)}, el ${pct} % de tu gasto mensual (${pesos(gm)}). Solo vale la pena si las optimizaciones te ahorran al menos eso; lo verás con precios reales antes de decidir.`);
-    return { plan: 'plus', razones, costoPctGasto: pct };
+  if (!conDatos) {
+    razones.push('Sin tu lista habitual no podemos calcular con precios reales cuánto ahorrarías de más; no te recomendamos pagar a ciegas.');
+    razones.push('Empieza gratis: cuando escribas tu lista o subas un ticket verás el ahorro de cada plan.');
+    return { plan: 'gratis', razones, opciones };
   }
-  if (cm < 2 && pct <= 2 * UMBRAL_PCT_PLUS) {
-    razones.push('Compras una vez al mes: un análisis completo por compra con créditos te sale mejor que una suscripción.');
-    return { plan: 'analisis_individual', razones, costoPctGasto: pct };
+  const candidatas = opciones.filter((o) => o.aplica && (o.beneficioNeto ?? 0) >= 1)
+    .sort((a, b) => (b.beneficioNeto! - a.beneficioNeto!) || (a.costoMes - b.costoMes));
+  const frase = n <= 1 ? 'compras una vez al mes' : `haces ≈ ${n} compras al mes`;
+  if (!candidatas.length) {
+    razones.push(`Con tu lista, el análisis completo ahorra ${pesos(extra!.mxn)} más por compra que el básico; como ${frase}, eso no cubre el costo de ningún plan.`);
+    razones.push('El plan Gratis te da más valor. Si tu despensa cambia, te volveremos a calcular.');
+    return { plan: 'gratis', razones, opciones };
   }
-  razones.push(pct > UMBRAL_PCT_PLUS
-    ? `Plus costaría el ${pct} % de tu gasto mensual; con lo que gastas, el plan Gratis te da más valor.`
-    : 'Con lo que nos contaste, el plan Gratis cubre lo que necesitas. Puedes cambiar cuando quieras.');
-  return { plan: 'gratis', razones, costoPctGasto: pct };
+  const mejor = candidatas[0];
+  const cfg = planes.find((x) => x.id === mejor.id)!;
+  razones.push(`Con tu lista habitual, el análisis completo ahorra ${pesos(extra!.mxn)} más por compra que el básico (mismos productos y precios).`);
+  razones.push(`Como ${frase}, ${cfg.tipo === 'pago_unico' ? `pagar ${pesos(cfg.precio_mxn)} por análisis` : `${cfg.optimizaciones_incluidas} análisis por ${pesos(cfg.precio_mxn)} al mes`} te deja un beneficio neto estimado de ${pesos(mejor.beneficioNeto!)} al mes.`);
+  if (p.problemas.some((x) => x === 'se_terminan' || x === 'desperdicio')) {
+    razones.push('Además ajusta tus cantidades con tu revisión de fin de periodo (eso no está sumado al ahorro porque aún no tenemos tu historial).');
+  }
+  return { plan: mejor.id, razones, opciones };
 }
 
 // ---------- Preferencias aplicadas al catálogo ----------

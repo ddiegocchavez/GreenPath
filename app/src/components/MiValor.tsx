@@ -40,7 +40,7 @@ export function MiValor({ uid, cat, planes, estado, setEstado, onEditarPerfil, o
   const [revs, setRevs] = useState<RevisionGuardada[]>([]);
   const [msg, setMsg] = useState<string | null>(null);
   const [revisando, setRevisando] = useState<string | null>(null);
-  const plus = planes.find((p) => p.id === 'plus');
+  const actual = planes.find((p) => p.id === (estado?.plan ?? 'gratis'));
 
   const cargar = useCallback(() => Promise.all([historial(), miEstado()])
     .then(([h, e]) => { setOpts(h.optimizaciones); setMovs(h.movimientos); setRevs(h.revisiones); setEstado(e); })
@@ -61,8 +61,8 @@ export function MiValor({ uid, cat, planes, estado, setEstado, onEditarPerfil, o
   const comprobado = comprobadas.reduce((a, o) => a + ((o.total_referencia ?? 0) - (o.gasto_real ?? 0)), 0);
   const gastoReal = comprobadas.reduce((a, o) => a + (o.gasto_real ?? 0), 0);
   const desperdicio = revs.reduce((a, r) => a + (r.costo_desperdicio ?? 0), 0);
-  const meses = estado?.plan === 'plus' ? MESES_DEMO(estado.plan_desde) : 0;
-  const costoPlus = meses * (plus?.precio_mxn ?? 99);
+  const meses = actual?.tipo === 'suscripcion' ? MESES_DEMO(estado?.plan_desde) : 0;
+  const costoPlus = meses * (actual?.precio_mxn ?? 0);
   const pagosAnalisis = opts.reduce((a, o) => a + (o.pagado_demo_mxn ?? 0), 0);
   const conPlus = opts.filter((o) => o.ahorro_adicional_plus != null);
   const extraPlus = conPlus.reduce((a, o) => a + (o.ahorro_adicional_plus ?? 0), 0);
@@ -83,20 +83,26 @@ export function MiValor({ uid, cat, planes, estado, setEstado, onEditarPerfil, o
       {/* Plan y créditos */}
       <section className="rounded-3xl bg-forest p-5 text-white">
         <div className="flex items-center justify-between">
-          <p className="text-2xl font-black">{estado?.plan === 'plus' ? 'GreenPath Plus' : 'GreenPath Gratis'}</p>
+          <p className="text-2xl font-black">GreenPath {actual?.nombre?.replace('GreenPath ', '') ?? 'Gratis'}</p>
           <Etiqueta t="demo">Demo</Etiqueta>
         </div>
-        {estado?.plan === 'plus' ? (
-          <>
-            <p className="mt-1 text-sprout">{estado.saldo} optimizaciones disponibles · usaste {estado.usadas_ciclo} de {plus?.optimizaciones_incluidas ?? 4} este mes ({estado.ciclo})</p>
-            <button className="mt-3 w-full rounded-2xl bg-white/15 py-3 font-extrabold" onClick={() => accion(async () => setEstado(await cambiarPlanDemo('gratis')), 'Cancelaste Plus. Tu historial se conserva.')}>Cancelar Plus</button>
-          </>
+        {actual && actual.tipo === 'suscripcion' ? (
+          <p className="mt-1 text-sprout">{estado?.saldo} análisis disponibles · usaste {estado?.usadas_ciclo} de {actual.optimizaciones_incluidas} este mes ({estado?.ciclo}) · {pesos(actual.precio_mxn)}/mes</p>
         ) : (
-          <>
-            <p className="mt-1 text-sprout">Plus: {pesos(plus?.precio_mxn ?? 99)}/mes · {plus?.optimizaciones_incluidas ?? 4} optimizaciones completas</p>
-            <button className="mt-3 w-full rounded-2xl bg-white py-3 font-extrabold text-forest" onClick={() => accion(async () => setEstado(await cambiarPlanDemo('plus')), 'Plus activado en modo demostración (sin cobro).')}>Probar Plus (demo, sin cobro)</button>
-          </>
+          <p className="mt-1 text-sprout">Sin suscripción. Análisis completo cuando lo necesites: Individual {pesos(planes.find((p) => p.id === 'individual')?.precio_mxn ?? 29)}.</p>
         )}
+        <div className="mt-3 grid grid-cols-3 gap-2">
+          {(['gratis', 'flex', 'plus'] as const).map((id) => {
+            const cfg = planes.find((p) => p.id === id);
+            const es = (estado?.plan ?? 'gratis') === id;
+            return (
+              <button key={id} disabled={es} onClick={() => accion(async () => setEstado(await cambiarPlanDemo(id)), id === 'gratis' ? 'Cancelaste tu suscripción. Tu historial se conserva.' : `${cfg?.nombre} activado en modo demostración (sin cobro).`)}
+                className={`rounded-2xl py-2 text-sm font-extrabold ${es ? 'bg-white text-forest' : 'bg-white/15'}`}>
+                {id === 'gratis' ? 'Gratis' : `${id === 'flex' ? 'Flex' : 'Plus'} ${pesos(cfg?.precio_mxn ?? 0)}`}{es ? ' ✓' : ''}
+              </button>
+            );
+          })}
+        </div>
       </section>
 
       <Dashboard opts={opts} />
@@ -111,12 +117,12 @@ export function MiValor({ uid, cat, planes, estado, setEstado, onEditarPerfil, o
             <Dato titulo="Gasto de referencia" valor={pesos(ref)} t="estimado" nota="Tu ticket o tu súper habitual, con la misma lista." />
             <Dato titulo="Costo optimizado" valor={pesos(optTot)} t="estimado" />
             <Dato titulo="Ahorro potencial" valor={pesos(potencial)} t="estimado" nota={`Si compras lo recomendado a los precios consultados. Solo productos con precio en ambas listas${excluidos ? ` (${excluidos} sin comparar)` : ""}.`} />
-            {conPlus.length > 0 && <Dato titulo="Ahorro adicional encontrado por Plus" valor={pesos(extraPlus)} t="estimado" nota={`Frente al modelo básico con la misma lista y precios, en ${conPlus.length} optimización(es) Plus.`} />}
+            {conPlus.length > 0 && <Dato titulo="Ahorro adicional del análisis completo" valor={pesos(extraPlus)} t="estimado" nota={`Frente al modelo básico (Gratis) con la misma lista y precios, en ${conPlus.length} análisis completo(s).`} />}
             <Dato titulo="Ahorro comprobado" valor={comprobadas.length ? pesos(comprobado) : 'Sin datos'} t="comprobado"
               nota={comprobadas.length ? `Pagaste ${pesos(gastoReal)} en ${comprobadas.length} compra(s) registradas.` : 'Registra lo que pagaste en una optimización.'} />
             <Dato titulo="Dinero perdido por desperdicio" valor={revs.length ? pesos(desperdicio) : 'Sin datos'} t="tuyo" />
-            {estado?.plan === 'plus' && <Dato titulo="Costo de suscripción" valor={pesos(costoPlus)} t="demo" nota={`${meses} mes(es) de Plus en modo demostración.`} />}
-            {pagosAnalisis > 0 && <Dato titulo="Análisis pagados" valor={pesos(pagosAnalisis)} t="demo" nota="Pago por análisis en modo demostración (no se cobró)." />}
+            {meses > 0 && <Dato titulo="Costo de suscripción" valor={pesos(costoPlus)} t="demo" nota={`${meses} mes(es) de ${actual?.nombre} en modo demostración.`} />}
+            {pagosAnalisis > 0 && <Dato titulo="Análisis Individuales pagados" valor={pesos(pagosAnalisis)} t="demo" nota="Modo demostración (no se cobró)." />}
             {costo > 0 && <Dato titulo="Beneficio neto estimado" valor={pesos(potencial - costo)} t="estimado" nota="Ahorro potencial menos lo pagado (Plus y análisis)." />}
             {costo > 0 && comprobadas.length > 0 && <Dato titulo="Beneficio neto comprobado" valor={pesos(comprobado - costo)} t="comprobado" />}
           </div>
@@ -191,7 +197,7 @@ function FilaHistorial({ o, cat, revision, revisando, setRevisando, onGastoReal,
       <div className="flex items-start justify-between gap-2">
         <div>
           <p className="font-extrabold text-forest">{fecha(o.creada_en)} · {tiendas}</p>
-          <p className="text-xs text-muted">{o.items.length} productos · {o.origen === 'ticket' ? 'desde ticket' : 'lista'} · {o.modo === 'plus' ? 'Plus' : 'Gratis'}</p>
+          <p className="text-xs text-muted">{o.items.length} productos · {o.origen === 'ticket' ? 'desde ticket' : 'lista'} · {{ gratis: 'Gratis', individual: 'Individual', flex: 'Flex', plus: 'Plus' }[o.modo]}</p>
         </div>
         <div className="text-right">
           <p className="text-xl font-black text-forest">{pesos(o.total_optimizado)}</p>
@@ -211,7 +217,7 @@ function FilaHistorial({ o, cat, revision, revisando, setRevisando, onGastoReal,
         {!revision && <button className="rounded-full border border-mint bg-white px-3 py-1 font-bold text-forest" onClick={() => setRevisando(!revisando)}>Revisión del periodo</button>}
         {revision && <span className="rounded-full bg-mint px-3 py-1 font-bold text-forest">✓ Revisión guardada</span>}
         <button className="rounded-full border border-mint bg-white px-3 py-1 font-bold text-forest" onClick={onNuevaLista}>Repetir lista{revision ? ' (ajustada)' : ''}</button>
-        {o.modo === 'plus' && <button className="rounded-full border border-mint bg-white px-3 py-1 font-bold text-forest" onClick={onCompensacion}>¿Aplica compensación?</button>}
+        {(o.modo === 'plus' || o.modo === 'flex') && <button className="rounded-full border border-mint bg-white px-3 py-1 font-bold text-forest" onClick={onCompensacion}>¿Aplica compensación?</button>}
       </div>
       {revisando && (
         <div className="mt-3 space-y-3 rounded-2xl bg-mist p-3 text-sm">

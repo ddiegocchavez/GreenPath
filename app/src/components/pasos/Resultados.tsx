@@ -4,7 +4,7 @@ import { useMemo, useState } from 'react';
 import { actualizarAlternativas, cambiarPlanDemo, guardarOptimizacion, type Estado } from '@/lib/cuenta';
 import { mapsUrl, masCercana } from '@/lib/geo';
 import { armarPlan, etiquetaTiendas, evaluar, evaluarAlternativas, recortarAPresupuesto, type Plan, type Recorte } from '@/lib/optimizar';
-import { ALTERNATIVAS, alternativasPara, aplicarAlternativas, aplicarPreferencias, comprasPorMes, type Perfil } from '@/lib/perfil';
+import { ALTERNATIVAS, alternativasPara, aplicarAlternativas, aplicarPreferencias, comprasPorMes, recomendarPlan, type Perfil, type PlanConfig as PlanCfg } from '@/lib/perfil';
 import { compararCubiertos, desglose, distribuirPresupuesto, siguienteTip, tipsPara, type Tip } from '@/lib/impacto';
 import type { Catalogo, Item, Prioridad, Punto, TiendaId } from '@/lib/tipos';
 import { InsigniaP, InsigniaS, nombreCalidad, pesos } from '../ui';
@@ -15,7 +15,7 @@ export function Resultados(props: {
   cat: Catalogo; nombre: string; items: Item[]; presupuesto: number | null; prioridad: Prioridad; punto: Punto;
   totalTicket: number | null; recortes: Recorte[]; onReiniciar: () => void; onEditar: () => void;
   origen: 'lista' | 'ticket'; uid: string | null; perfil: Perfil | null; setPerfil: (p: Perfil) => void;
-  estado: Estado | null; setEstado: (e: Estado) => void; onVerValor: () => void; precioAnalisis?: number | null;
+  estado: Estado | null; setEstado: (e: Estado) => void; onVerValor: () => void; planesConfig: PlanCfg[];
   onAplicarAjuste?: (tiendas: TiendaId[]) => void; notaAjustes?: string[];
 }) {
   const { nombre, presupuesto, prioridad, punto, totalTicket, recortes, perfil, estado } = props;
@@ -24,7 +24,7 @@ export function Resultados(props: {
   const [habitualLocal, setHabitualLocal] = useState<TiendaId | null>(null);
   const [guardado, setGuardado] = useState<string | null>(null);
   const [guardando, setGuardando] = useState(false);
-  const [pagado, setPagado] = useState(false);
+  const [individual, setIndividual] = useState(false); // análisis Individual comprado para ESTA lista (demo)
   const [idem] = useState(() => crypto.randomUUID());
 
   // Preferencias del perfil (súper, calidad, restricciones, marcas) y alternativas aceptadas.
@@ -39,8 +39,10 @@ export function Resultados(props: {
     (perfil?.alternativas_aceptadas ?? []).includes(e.id) || arr.filter((x) => x.de === e.de && x.tipo === e.tipo).indexOf(e) < 2);
   const aceptadas = (perfil?.alternativas_aceptadas ?? []).filter((a) => disponibles.some((d) => d.id === a));
   const claveAceptadas = aceptadas.join();
-  // Gratis = modelo básico (tienda más barata, sin alternativas). Plus con créditos = modelo avanzado.
-  const completo = estado?.plan === 'plus' && estado.saldo > 0;
+  // Gratis = modelo básico (tienda más barata, sin alternativas).
+  // Análisis completo (modelo avanzado) = suscripción Flex/Plus con análisis disponibles, o un Individual pagado.
+  const suscripcion = (estado?.plan === 'plus' || estado?.plan === 'flex') && estado.saldo > 0;
+  const completo = suscripcion || individual;
   const items = completo ? aplicarAlternativas(pref.items, claveAceptadas ? claveAceptadas.split(',') : []) : pref.items;
   const cercanas = useMemo(() => Object.fromEntries(cat.tiendas.map((t) => [t.id, masCercana(cat.sucursales, t.id, punto)])), [cat, punto]);
   const dist = (t: TiendaId) => cercanas[t]?.km ?? null;
@@ -61,9 +63,12 @@ export function Resultados(props: {
   const extraMxn = compVista ? compVista.ahorro : 0;
   const extraKg = compVista?.refKg != null && compVista.optKg != null ? Math.round((compVista.refKg - compVista.optKg) * 10) / 10 : 0;
   const comprasMes = perfil ? comprasPorMes(perfil) : null;
-  const activarPlus = async () => {
+  const precioDe = (id: string) => props.planesConfig.find((p) => p.id === id)?.precio_mxn ?? 0;
+  // Qué modalidad conviene con el ahorro adicional REAL de esta lista (mismos datos) y tu frecuencia.
+  const reco = perfil && compVista ? recomendarPlan(perfil, props.planesConfig, { mxn: Math.max(0, extraMxn), kg: extraKg, comparables: compVista.comparables }) : null;
+  const activarPlan = async (plan: 'flex' | 'plus') => {
     if (!props.uid) { props.onVerValor(); return; }
-    try { props.setEstado(await cambiarPlanDemo('plus')); } catch { props.onVerValor(); }
+    try { props.setEstado(await cambiarPlanDemo(plan)); } catch { props.onVerValor(); }
   };
 
   // Referencia comparable: el ticket, o la MISMA lista (sin alternativas) en tu súper habitual.
@@ -101,9 +106,9 @@ export function Resultados(props: {
     await actualizarAlternativas(props.uid, ac, re).catch(() => undefined);
   };
 
-  // En Gratis el detalle por producto (qué comprar y dónde) y guardar el historial se desbloquean pagando el análisis.
-  const desbloqueado = completo || pagado;
-  const precioAnalisis = props.precioAnalisis ?? 5;
+  // En Gratis el detalle por producto (qué comprar y dónde) y guardar el historial requieren un análisis completo.
+  const desbloqueado = completo;
+  const precioAnalisis = precioDe('individual') || 29;
 
   const guardar = async () => {
     setGuardando(true);
@@ -117,13 +122,12 @@ export function Resultados(props: {
         co2e_referencia: comp?.refKg ?? null, co2e_optimizado: comp ? comp.optKg : mejor.huellaKg ?? null, tiendas: mejor.tiendas,
         detalle: filas, productos_excluidos: comp?.excluidos ?? [],
         ahorro_adicional_plus: vsBasico && vsBasico.comparables > 0 ? vsBasico.ahorro : null,
-        ...(completo ? { modo: 'plus' as const } : {}),
-      }, idem, !completo);
+        ...(suscripcion ? { modo: 'avanzado' as const } : {}),
+      }, idem, !suscripcion);
       props.setEstado({ plan: r.plan, saldo: r.saldo, usadas_ciclo: r.usadas_ciclo, ciclo: r.ciclo, plan_desde: r.plan_desde });
-      if (!completo) setPagado(true);
       setGuardado(r.repetida ? 'Ya estaba guardada (no se cobró de nuevo).'
-        : r.modo === 'plus' ? `Guardada. Te quedan ${r.saldo} optimizaciones este mes.`
-        : `Análisis desbloqueado y guardado. Pago de ${pesos(precioAnalisis)} en modo demostración: no se cobró nada.`);
+        : r.modo === 'individual' ? `Análisis Individual guardado. Pago de ${pesos(precioAnalisis)} en modo demostración: no se cobró nada.`
+        : `Guardada. Te quedan ${r.saldo} análisis este mes.`);
     } catch (e) { setGuardado(e instanceof Error ? e.message : String(e)); }
     setGuardando(false);
   };
@@ -265,13 +269,35 @@ export function Resultados(props: {
             <li>✓ Sube calidad o sustentabilidad con lo que te sobre del presupuesto.</li>
             <li>✓ Aprende de tus revisiones para que no te sobre ni te falte.</li>
           </ul>
-          {comprasMes != null && comprasMes > 1 && (
-            <p className="mt-2 rounded-2xl bg-mint p-3 text-sm text-forest">
-              Si repites esta compra {comprasMes} veces al mes, son ≈ <b>{pesos(extraMxn * comprasMes)}</b> al mes contra {pesos(99)} de Plus (estimado).
-            </p>
+          {reco && reco.opciones.length > 0 && (
+            <div className="mt-3 overflow-x-auto rounded-2xl bg-mint p-3 text-sm text-forest">
+              <p className="font-bold">Con tu frecuencia ({comprasMes} {comprasMes === 1 ? 'compra' : 'compras'}/mes), por mes:</p>
+              <table className="mt-1 w-full">
+                <tbody>
+                  {reco.opciones.filter((o) => o.aplica).map((o) => (
+                    <tr key={o.id} className={reco.plan === o.id ? 'font-black' : ''}>
+                      <td>{o.id === 'individual' ? 'Individual' : o.id === 'flex' ? 'Flex' : 'Plus'}{reco.plan === o.id ? ' ★' : ''}</td>
+                      <td className="text-right">cuesta {pesos(o.costoMes)}</td>
+                      <td className="text-right">ahorra {pesos(o.ahorroExtraMes ?? 0)}</td>
+                      <td className={`text-right ${(o.beneficioNeto ?? 0) < 0 ? 'text-alert' : ''}`}>neto {pesos(o.beneficioNeto ?? 0)}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+              {reco.plan === 'gratis' && <p className="mt-1 text-xs">Con esta lista ningún plan te deja beneficio neto al mes: si lo necesitas, compra solo este análisis.</p>}
+            </div>
           )}
-          <button className="btn btn-primary mt-4" onClick={activarPlus}>Activar Plus y ver mi ahorro completo</button>
-          <p className="mt-2 text-xs text-muted">Calculado con los mismos precios reales de tu lista. Modo demostración: sin cobro.</p>
+          <div className="mt-4 space-y-2">
+            <button className={`btn ${reco?.plan === 'individual' || reco?.plan === 'gratis' || !reco ? 'btn-primary' : 'btn-light'}`} onClick={() => setIndividual(true)}>
+              Ver este análisis completo · Individual {pesos(precioAnalisis)} (demo)
+            </button>
+            {(['flex', 'plus'] as const).filter((id) => !reco || reco.opciones.find((o) => o.id === id)?.aplica).map((id) => (
+              <button key={id} className={`btn ${reco?.plan === id ? 'btn-primary' : 'btn-light'}`} onClick={() => activarPlan(id)}>
+                Activar {id === 'flex' ? 'Flex' : 'Plus'} · {pesos(precioDe(id))}/mes (demo)
+              </button>
+            ))}
+          </div>
+          <p className="mt-2 text-xs text-muted">Calculado con los mismos precios reales de tu lista, solo productos con precio en ambos análisis. Modo demostración: sin cobro.</p>
         </section>
       )}
 
@@ -369,17 +395,22 @@ export function Resultados(props: {
 
       {props.uid && (
         <section className="card">
-          {!completo && !guardado && (
-            <p className="mb-3 text-sm text-muted">
-              En Gratis ves los totales por tienda. Para ver <b>qué producto comprar en cada tienda</b> y guardar este análisis en tu historial,
-              desbloquéalo por {pesos(precioAnalisis)} o usa Plus.
-            </p>
+          {!completo && !guardado ? (
+            <>
+              <p className="mb-3 text-sm text-muted">
+                En Gratis ves la comparación básica. Para ver <b>qué producto comprar en cada tienda</b>, las alternativas y guardar en tu historial,
+                compra este análisis (Individual, {pesos(precioAnalisis)}) o usa Flex/Plus.
+              </p>
+              <button className="btn btn-primary" onClick={() => setIndividual(true)}>Análisis completo · Individual {pesos(precioAnalisis)} (demo)</button>
+              <button className="btn btn-light mt-3" onClick={props.onVerValor}>Ver planes Flex y Plus</button>
+            </>
+          ) : (
+            <button className="btn btn-primary" onClick={guardar} disabled={guardando || !!guardado}>
+              {guardando ? 'Procesando…' : guardado ? 'Guardada ✓'
+                : suscripcion ? `Guardar análisis (usa 1 de ${estado?.saldo})` : `Guardar mi análisis Individual · ${pesos(precioAnalisis)} (demo, sin cobro)`}
+            </button>
           )}
-          <button className="btn btn-primary" onClick={guardar} disabled={guardando || !!guardado}>
-            {guardando ? 'Procesando…' : guardado ? (completo ? 'Guardada ✓' : 'Desbloqueado ✓')
-              : completo ? `Guardar optimización (usa 1 de ${estado?.saldo})` : `Desbloquear y guardar · ${pesos(precioAnalisis)} (demo, sin cobro)`}
-          </button>
-          {!completo && !guardado && <button className="btn btn-light mt-3" onClick={props.onVerValor}>Conocer Plus</button>}
+          {individual && !suscripcion && !guardado && <p className="mt-2 text-xs text-muted">Análisis Individual: el pago de demostración se registra al guardar.</p>}
           {guardado && <p className="mt-2 text-sm font-bold text-pine">{guardado} <button className="underline" onClick={props.onVerValor}>Ver Mi valor</button></p>}
         </section>
       )}
@@ -497,7 +528,7 @@ function Bloqueado({ precio, oscuro }: { precio: number; oscuro?: boolean }) {
     <div className={`mt-3 rounded-2xl p-4 text-center ${oscuro ? 'bg-white text-ink' : 'bg-mist'}`}>
       <p className="text-2xl" aria-hidden>🔒</p>
       <p className="font-extrabold text-forest">Detalle por producto bloqueado</p>
-      <p className="text-sm text-muted">Qué marca y presentación comprar en cada tienda. Desbloquéalo por {pesos(precio)} (demo) o con Plus.</p>
+      <p className="text-sm text-muted">Qué marca y presentación comprar en cada tienda. Desbloquéalo con un análisis Individual ({pesos(precio)}, demo) o con Flex/Plus.</p>
     </div>
   );
 }

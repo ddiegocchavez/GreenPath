@@ -31,28 +31,34 @@ const opt = { origen: 'lista', items: [{ productoId: 'huevo', cantidad: 12 }], p
 const { error: sinPago } = await a.rpc('guardar_optimizacion', { p: opt, p_idem: 'prueba-gratis-0' });
 check(!!sinPago, 'en Gratis no se guarda sin pagar el análisis');
 let { data: g0 } = await a.rpc('guardar_optimizacion', { p: opt, p_idem: 'prueba-gratis-1', p_pago_demo: true });
-check(g0.modo === 'gratis' && g0.saldo === 0 && Number(g0.pagado_demo_mxn) === 5, 'en Gratis, pagando $5 (demo) se guarda sin consumir créditos');
+check(g0.modo === 'individual' && g0.saldo === 0 && Number(g0.pagado_demo_mxn) === 29, 'en Gratis, un análisis Individual ($29 demo) se guarda sin consumir créditos');
 
+({ data: est } = await a.rpc('cambiar_plan_demo', { p_plan: 'flex' }));
+check(est.plan === 'flex' && est.saldo === 2, 'Flex demo asigna 2 análisis');
+const { data: gf } = await a.rpc('guardar_optimizacion', { p: opt, p_idem: 'prueba-flex-1' });
+check(gf.modo === 'flex' && gf.saldo === 1, 'análisis Flex consume 1');
+const { error: eInd } = await a.rpc('cambiar_plan_demo', { p_plan: 'individual' });
+check(!!eInd, 'Individual no es suscripción (se paga por análisis)');
 ({ data: est } = await a.rpc('cambiar_plan_demo', { p_plan: 'plus' }));
-check(est.plan === 'plus' && est.saldo === 4, 'Plus demo asigna 4 optimizaciones');
+check(est.plan === 'plus' && est.saldo === 5, 'Plus demo asigna 4 análisis (más 1 que quedaba de Flex)');
 ({ data: est } = await a.rpc('mi_estado'));
-check(est.saldo === 4, 'la asignación del ciclo no se duplica');
+check(est.saldo === 5, 'la asignación del ciclo no se duplica');
 
 const { data: g1 } = await a.rpc('guardar_optimizacion', { p: opt, p_idem: 'prueba-plus-1' });
 const { data: g1b } = await a.rpc('guardar_optimizacion', { p: opt, p_idem: 'prueba-plus-1' });
-check(g1.modo === 'plus' && g1.saldo === 3, 'optimización Plus consume 1 crédito');
-check(g1b.repetida === true && g1b.saldo === 3, 'mismo idem_key no cobra dos veces');
+check(g1.modo === 'plus' && g1.saldo === 4, 'análisis Plus consume 1 crédito');
+check(g1b.repetida === true && g1b.saldo === 4, 'mismo idem_key no cobra dos veces');
 
 const { data: c1 } = await a.rpc('evaluar_compensacion', { p_id: g1.id });
 const { data: c2 } = await a.rpc('evaluar_compensacion', { p_id: g1.id });
 check(c1.cumple && c1.otorgado && !c2.otorgado, `compensación una sola vez (ahorro $${c1.ahorro_estimado} < umbral $${c1.umbral})`);
 ({ data: est } = await a.rpc('mi_estado'));
-check(est.saldo === 4, 'saldo tras compensación: 4');
+check(est.saldo === 5, 'saldo tras compensación: 5');
 
-for (let i = 2; i <= 5; i++) await a.rpc('guardar_optimizacion', { p: opt, p_idem: `prueba-plus-${i}` });
+for (let i = 2; i <= 6; i++) await a.rpc('guardar_optimizacion', { p: opt, p_idem: `prueba-plus-${i}` });
 ({ data: est } = await a.rpc('mi_estado'));
 check(est.saldo === 0, 'saldo llega a 0');
-const { error: sinSaldo } = await a.rpc('guardar_optimizacion', { p: { ...opt, modo: 'plus' }, p_idem: 'prueba-plus-6' });
+const { error: sinSaldo } = await a.rpc('guardar_optimizacion', { p: { ...opt, modo: 'avanzado' }, p_idem: 'prueba-plus-7' });
 check(!!sinSaldo, 'sin créditos no permite optimización Plus');
 
 await a.rpc('registrar_gasto_real', { p_id: g1.id, p_monto: 105 });

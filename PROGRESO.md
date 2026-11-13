@@ -11,6 +11,32 @@ Hackatón Monterrey · entrega **13-nov-2026 09:00 (CDMX)**.
    - **Módulos:** Eventos (recuperar del historial de git), Negocios y consumo digital (app Android).
    - **Pagos y créditos:** créditos sueltos de "Análisis individual", y pasarela de pago real con autorización.
 
+## Cuatro modalidades: Gratis, Individual, Flex y Plus (13-nov-2026)
+| Plan | Precio (demo) | Análisis completos |
+|---|---|---|
+| Gratis | $0 | 0: diagnóstico y comparación básica |
+| Individual | $29 por pago | 1 por pago, cuando lo necesites |
+| Flex | $59 al mes | 2 al mes |
+| Plus | $99 al mes | 4 al mes |
+
+- **Configurable:** precios y análisis incluidos están en `public.planes` (columna `tipo`: gratis, pago_unico o suscripcion). Sin pagos reales.
+- **Encuesta:** nuevo paso opcional "¿Qué compras normalmente?" que se guarda en `perfiles.lista_habitual`. Esa lista se puede reutilizar en "Usar mi lista habitual".
+- **Recomendación con datos verificables** (`perfil.recomendarPlan` + `valor.extraAvanzado`):
+  - **Ahorro adicional por compra:** análisis completo (combina tiendas y la mejor alternativa ganar-ganar) contra el básico, con la lista habitual, precios reales y solo productos cubiertos en ambos.
+  - **Beneficio neto mensual por plan:** ahorro × análisis que usarías (según tu frecuencia y los incluidos en el plan) − costo.
+  - **Se recomienda** el mayor beneficio neto positivo. Si no hay lista o ningún plan da beneficio, se recomienda **Gratis**.
+  - **Despensa mensual estable** (≤ 1 compra al mes): solo Gratis o Individual, nunca una suscripción.
+- **Propuesta:** tabla por plan con costo, análisis, ahorro adicional, neto y CO₂e por mes, más lo que incluye cada uno.
+- **Resultados:**
+  - **Gratis:** comparación básica. El detalle, las alternativas y guardar requieren comprar un análisis Individual ($29) o tener Flex o Plus.
+  - **Tabla de venta:** usa el ahorro real de esa lista para comparar los planes según tu frecuencia.
+- **Servidor:** `guardar_optimizacion` cobra Individual (demo) o consume 1 análisis de Flex o Plus. `cambiar_plan_demo` acepta gratis, flex y plus. Se corrigió la asignación mensual para que no se duplique a quien ya tenía Plus.
+- **Hallazgo de precios:** con Individual a $29 y Flex a $59, **Flex nunca conviene**, porque 2 Individuales cuestan $58. El algoritmo no lo recomienda. Para que Flex tenga sentido debería costar menos de $58 (por ejemplo $49) o Individual más de $29.5. Es configurable.
+- **Pruebas:**
+  - `npm test` **40/40**: recomendación de los 4 planes (sin datos, mensual estable, quincenal, semanal), equivalencia de despensas, compra incompleta y ajuste a presupuesto.
+  - E2E **22/22**: Flex asigna 2, Individual no es suscripción, Individual cobra $29 demo y Plus asigna 4.
+- **Falta verificar en el navegador:** la extensión de Chrome sigue desconectada.
+
 ## Comparación justa y Plus con valor medible (13-nov-2026)
 **Errores encontrados y corregidos (inflaban el ahorro):**
 1. **Recorte automático:** si el presupuesto no alcanzaba, la app quitaba paquetes y comparaba el ticket completo contra la lista recortada. **Ahora:** no se recorta nada en automático. Se advierte cuánto falta, se propone un ajuste y solo se aplica si el usuario lo acepta; en ese caso ambas listas usan la versión ajustada.

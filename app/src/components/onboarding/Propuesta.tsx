@@ -1,32 +1,33 @@
 'use client';
-/** Diagnóstico + plan recomendado + Gratis vs Plus. Sin urgencia artificial ni ahorros prometidos. */
-import type { Plan } from '@/lib/cuenta';
-import { diagnosticar, recomendarPlan, type Perfil } from '@/lib/perfil';
+/**
+ * Diagnóstico + plan recomendado entre 4 modalidades (Gratis, Individual, Flex, Plus).
+ * El ahorro adicional se calcula con TU lista habitual y precios reales (modelo avanzado vs básico);
+ * si no hay datos o no hay beneficio neto, se recomienda Gratis. Sin urgencia artificial ni ahorros prometidos.
+ */
+import type { Plan, Suscripcion } from '@/lib/cuenta';
+import { diagnosticar, recomendarPlan, type Perfil, type PlanConfig, type PlanId } from '@/lib/perfil';
+import type { Catalogo } from '@/lib/tipos';
+import { extraAvanzado } from '@/lib/valor';
 import { pesos, Titulo } from '../ui';
 
-const GRATIS = [
-  'Modelo básico: la tienda más barata para toda tu lista',
-  'Precios reales de Walmart, H-E-B y Costco',
-  'Huella de CO₂e estimada con fuente científica',
-  'Leer tickets y comparar los totales',
-  'Detalle por producto y guardar en tu historial: $5 por análisis (demo)',
-];
-const PLUS = [
-  'Modelo avanzado: combina tiendas, cada producto donde está más barato',
-  'Alternativas ganar-ganar: cambios que bajan tu costo Y tu CO₂e',
-  'Sube calidad o sustentabilidad donde alcance tu dinero',
-  'Aprende de tus revisiones: ni te sobra ni te falta',
-  'Dashboard de tu ahorro y tu CO₂e por producto',
-];
-const NOMBRE_PLAN = { plus: 'GreenPath Plus', gratis: 'GreenPath Gratis', analisis_individual: 'Análisis individual', eventos: 'Análisis de evento', negocios: 'GreenPath Negocios' };
+const QUE_INCLUYE: Record<PlanId, string> = {
+  gratis: 'Diagnóstico y comparación básica: la tienda más barata para toda tu lista, precios reales y huella estimada.',
+  individual: 'Un análisis completo cuando lo necesites: combina tiendas, alternativas ganar-ganar, presupuesto y detalle por producto.',
+  flex: 'Dos análisis completos al mes, historial y ajuste de cantidades con tu revisión del periodo.',
+  plus: 'Cuatro análisis completos al mes, historial, ajuste de cantidades, distribución del presupuesto y dashboard.',
+};
+const NOMBRE: Record<string, string> = {
+  gratis: 'Gratis', individual: 'Individual', flex: 'Flex', plus: 'Plus', eventos: 'Análisis de evento', negocios: 'GreenPath Negocios',
+};
 
-export function Propuesta({ perfil, planes, onGratis, onPlus }: {
-  perfil: Perfil; planes: Plan[]; onGratis: () => void; onPlus: () => void;
+export function Propuesta({ perfil, planes, cat, onElegir }: {
+  perfil: Perfil; planes: Plan[]; cat: Catalogo; onElegir: (plan: Suscripcion) => void;
 }) {
-  const plus = planes.find((p) => p.id === 'plus');
   const d = diagnosticar(perfil);
-  const r = recomendarPlan(perfil, plus?.precio_mxn ?? 99, plus?.optimizaciones_incluidas ?? 4);
+  const { extra, alternativas } = extraAvanzado(cat, perfil.lista_habitual ?? [], perfil);
+  const r = recomendarPlan(perfil, planes as PlanConfig[], extra);
   const especial = r.plan === 'eventos' || r.plan === 'negocios';
+  const precio = (id: PlanId) => planes.find((p) => p.id === id)?.precio_mxn ?? 0;
 
   return (
     <div className="flex flex-1 flex-col gap-4 pb-8">
@@ -44,45 +45,76 @@ export function Propuesta({ perfil, planes, onGratis, onPlus }: {
         </section>
       )}
 
-      <section className="card">
-        <p className="font-extrabold text-forest">Para calcular tu ahorro necesitamos</p>
-        <ul className="mt-2 list-disc space-y-1 pl-5 text-muted">{d.datosFaltantes.map((x) => <li key={x}>{x}</li>)}</ul>
-        <p className="mt-2 text-xs text-muted">Todavía no te mostramos montos de ahorro: los calculamos solo con tus compras y precios reales.</p>
-      </section>
+      {!especial && (
+        <section className="card">
+          <p className="font-extrabold text-forest">Lo que calculamos con tu lista habitual</p>
+          {extra && extra.comparables > 0 ? (
+            <p className="mt-1 text-sm">
+              El análisis completo ahorra <b>{pesos(extra.mxn)}</b> más por compra que el básico
+              {extra.kg != null && extra.kg > 0 && <> y <b>{extra.kg} kg CO₂e</b> menos</>}
+              {alternativas > 0 && <> ({alternativas} {alternativas === 1 ? 'alternativa ganar-ganar' : 'alternativas ganar-ganar'})</>}.
+              <span className="block text-xs text-muted">{extra.comparables} productos, mismos precios reales; solo productos con precio en ambos análisis.</span>
+            </p>
+          ) : (
+            <p className="mt-1 text-sm text-muted">Sin tu lista habitual no podemos calcular el ahorro con precios reales. Puedes agregarla desde «Editar mis respuestas».</p>
+          )}
+        </section>
+      )}
 
       <section className="card border-2 border-leaf">
         <p className="text-sm font-bold uppercase tracking-wide text-leaf">Te recomendamos</p>
-        <p className="text-2xl font-black text-forest">{NOMBRE_PLAN[r.plan]}</p>
+        <p className="text-2xl font-black text-forest">GreenPath {NOMBRE[r.plan]}</p>
         <ul className="mt-2 space-y-1 text-sm">{r.razones.map((x) => <li key={x}>• {x}</li>)}</ul>
         {especial && <p className="mt-2 rounded-2xl bg-mint p-3 text-sm font-bold text-forest">Este módulo llega pronto a la versión web. Mientras, puedes usar GreenPath para tu despensa.</p>}
       </section>
 
       {!especial && (
-        <div className="grid grid-cols-1 gap-3">
-          <section className={`card ${r.plan !== 'plus' ? 'border-2 border-leaf' : ''}`}>
-            <div className="flex items-baseline justify-between"><p className="text-xl font-black text-forest">Gratis</p><p className="font-black text-forest">$0</p></div>
-            <ul className="mt-2 space-y-1 text-sm">{GRATIS.map((x) => <li key={x}>✓ {x}</li>)}</ul>
-          </section>
-          <section className={`card ${r.plan === 'plus' ? 'border-2 border-leaf' : ''}`}>
-            <div className="flex items-baseline justify-between">
-              <div><p className="text-xl font-black text-forest">Plus</p><p className="text-xs font-bold text-leaf">¿Quieres ahorrar más? Paga el modelo que encuentra más.</p></div>
-              <p className="font-black text-forest">{pesos(plus?.precio_mxn ?? 99)}<span className="text-sm font-bold text-muted">/mes</span></p>
-            </div>
-            <p className="text-sm font-bold text-leaf">{plus?.optimizaciones_incluidas ?? 4} optimizaciones completas al mes · todo lo de Gratis, más:</p>
-            <ul className="mt-2 space-y-1 text-sm">{PLUS.map((x) => <li key={x}>✓ {x}</li>)}</ul>
-            <p className="mt-2 text-xs text-muted">
-              Si una optimización Plus estima un ahorro adicional menor a {pesos(plus?.umbral_compensacion_mxn ?? 25)}, te devolvemos ese crédito.
-              Cancela cuando quieras sin perder tu historial.
-            </p>
-          </section>
-        </div>
+        <section className="card overflow-x-auto">
+          <p className="mb-2 font-extrabold text-forest">Compara los planes con tus datos (por mes)</p>
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="text-left text-muted">
+                <th className="py-1 font-semibold">Plan</th><th className="text-right font-semibold">Costo</th><th className="text-right font-semibold">Análisis</th>
+                <th className="text-right font-semibold">Ahorro extra</th><th className="text-right font-semibold">Neto</th><th className="text-right font-semibold">CO₂e −</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr className={`border-t border-mint ${r.plan === 'gratis' ? 'bg-mint font-bold' : ''}`}>
+                <td className="py-1">Gratis</td><td className="text-right">{pesos(0)}</td><td className="text-right">básico</td><td className="text-right">—</td><td className="text-right">{pesos(0)}</td><td className="text-right">—</td>
+              </tr>
+              {r.opciones.map((o) => (
+                <tr key={o.id} className={`border-t border-mint ${r.plan === o.id ? 'bg-mint font-bold' : ''} ${o.aplica ? '' : 'text-muted'}`} title={o.motivo}>
+                  <td className="py-1">{NOMBRE[o.id]}{o.id === 'individual' ? ` (${pesos(precio('individual'))} c/u)` : ''}</td>
+                  <td className="text-right">{pesos(o.costoMes)}</td>
+                  <td className="text-right">{o.analisisMes}</td>
+                  <td className="text-right">{o.ahorroExtraMes != null ? pesos(o.ahorroExtraMes) : '—'}</td>
+                  <td className={`text-right ${o.beneficioNeto != null && o.beneficioNeto < 0 ? 'text-alert' : ''}`}>{o.beneficioNeto != null ? pesos(o.beneficioNeto) : '—'}</td>
+                  <td className="text-right">{o.co2Mes != null ? `${o.co2Mes} kg` : '—'}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+          <p className="mt-2 text-xs text-muted">
+            Estimado: supone que tus compras se parecen a tu lista habitual. Neto = ahorro adicional − costo. «—» = sin datos suficientes; no lo inventamos.
+            {r.opciones.some((o) => !o.aplica) && ' Compras una vez al mes: no te recomendamos suscripciones.'}
+          </p>
+          <ul className="mt-3 space-y-1 text-xs">
+            {(['gratis', 'individual', 'flex', 'plus'] as PlanId[]).map((id) => <li key={id}><b>{NOMBRE[id]}:</b> {QUE_INCLUYE[id]}</li>)}
+          </ul>
+        </section>
       )}
 
       <div className="space-y-3">
-        <button className={`btn ${r.plan === 'plus' ? 'btn-light' : 'btn-primary'}`} onClick={onGratis}>Continuar gratis</button>
-        {!especial && <button className={`btn ${r.plan === 'plus' ? 'btn-primary' : 'btn-light'}`} onClick={onPlus}>Quiero ahorrar más: probar Plus (demo, sin cobro)</button>}
+        <button className={`btn ${r.plan === 'gratis' || r.plan === 'individual' || especial ? 'btn-primary' : 'btn-light'}`} onClick={() => onElegir('gratis')}>
+          {r.plan === 'individual' ? 'Continuar sin suscripción (pagas Individual cuando lo uses)' : 'Continuar gratis'}
+        </button>
+        {!especial && (['flex', 'plus'] as const).map((id) => (
+          <button key={id} className={`btn ${r.plan === id ? 'btn-primary' : 'btn-light'}`} onClick={() => onElegir(id)}>
+            Probar {NOMBRE[id]} · {pesos(precio(id))}/mes (demo, sin cobro)
+          </button>
+        ))}
       </div>
-      <p className="text-center text-xs text-muted">Modo demostración: no se realiza ningún cobro ni se piden datos de pago.</p>
+      <p className="text-center text-xs text-muted">Modo demostración: no se realiza ningún cobro ni se piden datos de pago. Cancela cuando quieras sin perder tu historial.</p>
     </div>
   );
 }
