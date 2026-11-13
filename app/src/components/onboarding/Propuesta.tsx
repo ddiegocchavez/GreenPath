@@ -5,17 +5,18 @@ import { diagnosticar, recomendarPlan, type Perfil } from '@/lib/perfil';
 import { pesos, Titulo } from '../ui';
 
 const GRATIS = [
-  'Tu perfil de consumo y diagnóstico',
-  'Comparar tu lista por tienda (Walmart, H-E-B, Costco) con precios reales',
+  'Modelo básico: la tienda más barata para toda tu lista',
+  'Precios reales de Walmart, H-E-B y Costco',
   'Huella de CO₂e estimada con fuente científica',
   'Leer tickets y comparar los totales',
   'Detalle por producto y guardar en tu historial: $5 por análisis (demo)',
 ];
 const PLUS = [
-  'Optimización completa: combina tiendas y respeta tu presupuesto',
+  'Modelo avanzado: combina tiendas, cada producto donde está más barato',
+  'Alternativas ganar-ganar: cambios que bajan tu costo Y tu CO₂e',
   'Sube calidad o sustentabilidad donde alcance tu dinero',
-  'Ajusta cantidades con tu revisión de fin de periodo',
-  'Seguimiento de ahorro potencial y comprobado',
+  'Aprende de tus revisiones: ni te sobra ni te falta',
+  'Dashboard de tu ahorro y tu CO₂e por producto',
 ];
 const NOMBRE_PLAN = { plus: 'GreenPath Plus', gratis: 'GreenPath Gratis', analisis_individual: 'Análisis individual', eventos: 'Análisis de evento', negocios: 'GreenPath Negocios' };
 
@@ -64,7 +65,7 @@ export function Propuesta({ perfil, planes, onGratis, onPlus }: {
           </section>
           <section className={`card ${r.plan === 'plus' ? 'border-2 border-leaf' : ''}`}>
             <div className="flex items-baseline justify-between">
-              <p className="text-xl font-black text-forest">Plus</p>
+              <div><p className="text-xl font-black text-forest">Plus</p><p className="text-xs font-bold text-leaf">¿Quieres ahorrar más? Paga el modelo que encuentra más.</p></div>
               <p className="font-black text-forest">{pesos(plus?.precio_mxn ?? 99)}<span className="text-sm font-bold text-muted">/mes</span></p>
             </div>
             <p className="text-sm font-bold text-leaf">{plus?.optimizaciones_incluidas ?? 4} optimizaciones completas al mes · todo lo de Gratis, más:</p>
@@ -79,7 +80,7 @@ export function Propuesta({ perfil, planes, onGratis, onPlus }: {
 
       <div className="space-y-3">
         <button className={`btn ${r.plan === 'plus' ? 'btn-light' : 'btn-primary'}`} onClick={onGratis}>Continuar gratis</button>
-        {!especial && <button className={`btn ${r.plan === 'plus' ? 'btn-primary' : 'btn-light'}`} onClick={onPlus}>Probar Plus (demostración, sin cobro)</button>}
+        {!especial && <button className={`btn ${r.plan === 'plus' ? 'btn-primary' : 'btn-light'}`} onClick={onPlus}>Quiero ahorrar más: probar Plus (demo, sin cobro)</button>}
       </div>
       <p className="text-center text-xs text-muted">Modo demostración: no se realiza ningún cobro ni se piden datos de pago.</p>
     </div>

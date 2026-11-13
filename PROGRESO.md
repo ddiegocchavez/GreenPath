@@ -11,6 +11,15 @@ Hackatón Monterrey · entrega **13-nov-2026 09:00 (CDMX)**.
    - **Módulos:** Eventos (recuperar del historial de git), Negocios y consumo digital (app Android).
    - **Pagos y créditos:** créditos sueltos de "Análisis individual", y pasarela de pago real con autorización.
 
+## Gratis vs Plus: "¿Quieres ahorrar más? Paga más" (13-nov-2026)
+- **Modelo básico (Gratis):** la tienda más barata para toda tu lista. No combina tiendas ni aplica alternativas.
+- **Modelo avanzado (Plus):** combina tiendas, aplica alternativas ganar-ganar (ver cuáles y aceptarlas), sube calidad o sustentabilidad con el presupuesto y aprende de las revisiones.
+- **De dónde sale la diferencia de ahorro:** son funciones reales del modelo avanzado. A Gratis **nunca** se le muestran precios peores; mostrarle resultados peores a propósito sería engañoso (Ley Federal de Protección al Consumidor).
+- **Tarjeta de venta en Gratis:**
+  - "Estás dejando $X sobre la mesa en esta compra" y los kg de CO₂e que podrías evitar. Se calcula con el modelo avanzado sobre la misma lista y los mismos precios.
+  - Alternativas bloqueadas 🔒 con su ahorro, proyección mensual si repites la compra (marcada como estimado) y botón para activar Plus (demo).
+  - **Sin manipulación:** no hay urgencia falsa, reseñas inventadas ni ahorros que no existen.
+
 ## Dashboard, tips y alternativas ganar-ganar (13-nov-2026)
 - **Dashboard** (`components/Dashboard.tsx`, en Mi valor):
   - Cada despensa guardada registra su desglose por producto: antes/después en pesos y kg CO₂e (columna `optimizaciones.detalle`, migración `detalle_por_producto`).

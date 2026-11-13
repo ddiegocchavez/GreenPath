@@ -1,10 +1,10 @@
 'use client';
 /** Resultados: plan recomendado, tiendas ordenadas por precio (mayor↔menor), combinaciones y detalle por producto. */
 import { useMemo, useState } from 'react';
-import { actualizarAlternativas, guardarOptimizacion, type Estado } from '@/lib/cuenta';
+import { actualizarAlternativas, cambiarPlanDemo, guardarOptimizacion, type Estado } from '@/lib/cuenta';
 import { mapsUrl, masCercana } from '@/lib/geo';
 import { armarPlan, etiquetaTiendas, evaluar, evaluarAlternativas, type Plan, type Recorte } from '@/lib/optimizar';
-import { ALTERNATIVAS, alternativasPara, aplicarAlternativas, aplicarPreferencias, type Perfil } from '@/lib/perfil';
+import { ALTERNATIVAS, alternativasPara, aplicarAlternativas, aplicarPreferencias, comprasPorMes, type Perfil } from '@/lib/perfil';
 import { desglose, siguienteTip, tipsPara, type Tip } from '@/lib/impacto';
 import type { Catalogo, Item, Prioridad, Punto, TiendaId } from '@/lib/tipos';
 import { InsigniaP, InsigniaS, nombreCalidad, pesos } from '../ui';
@@ -38,10 +38,9 @@ export function Resultados(props: {
     (perfil?.alternativas_aceptadas ?? []).includes(e.id) || arr.filter((x) => x.de === e.de && x.tipo === e.tipo).indexOf(e) < 2);
   const aceptadas = (perfil?.alternativas_aceptadas ?? []).filter((a) => disponibles.some((d) => d.id === a));
   const claveAceptadas = aceptadas.join();
-  const items = aplicarAlternativas(pref.items, claveAceptadas ? claveAceptadas.split(',') : []);
-
-  // Gratis: comparación por tienda a precio más bajo. Plus (con créditos): optimización completa.
+  // Gratis = modelo básico (tienda más barata, sin alternativas). Plus con créditos = modelo avanzado.
   const completo = estado?.plan === 'plus' && estado.saldo > 0;
+  const items = completo ? aplicarAlternativas(pref.items, claveAceptadas ? claveAceptadas.split(',') : []) : pref.items;
   const cercanas = useMemo(() => Object.fromEntries(cat.tiendas.map((t) => [t.id, masCercana(cat.sucursales, t.id, punto)])), [cat, punto]);
   const dist = (t: TiendaId) => cercanas[t]?.km ?? null;
   const planesCompletos = evaluar(cat, items, presupuesto, prioridad, dist);
@@ -51,7 +50,17 @@ export function Resultados(props: {
   const solas = planes.filter((p) => p.tiendas.length === 1).sort((a, b) =>
     (a.faltantes.length - b.faltantes.length) || (orden === 'asc' ? a.total - b.total : b.total - a.total));
   const combos = completo ? planes.filter((p) => p.tiendas.length > 1).slice(0, 3) : [];
-  const vistaPlus = !completo ? planesCompletos[0] : null;
+  // Lo que el modelo avanzado (Plus) encuentra en ESTA lista con los mismos precios:
+  // combinar tiendas + la mejor alternativa ganar-ganar por producto + prioridad y presupuesto.
+  const mejoresGG = [...new Map(ganaGana.map((e) => [e.de, e] as const)).values()];
+  const vistaPlus = !completo ? evaluar(cat, aplicarAlternativas(pref.items, mejoresGG.map((e) => e.id)), presupuesto, prioridad, dist)[0] ?? null : null;
+  const extraMxn = vistaPlus && mejor ? Math.round((mejor.total - vistaPlus.total) * 100) / 100 : 0;
+  const extraKg = vistaPlus && mejor?.huellaKg != null && vistaPlus.huellaKg != null ? Math.round((mejor.huellaKg - vistaPlus.huellaKg) * 10) / 10 : 0;
+  const comprasMes = perfil ? comprasPorMes(perfil) : null;
+  const activarPlus = async () => {
+    if (!props.uid) { props.onVerValor(); return; }
+    try { props.setEstado(await cambiarPlanDemo('plus')); } catch { props.onVerValor(); }
+  };
 
   // Referencia comparable: el ticket, o la MISMA lista (sin alternativas) en tu súper habitual.
   const habitual = (habitualLocal ?? perfil?.supermercados[0] ?? null) as TiendaId | null;
@@ -87,7 +96,7 @@ export function Resultados(props: {
         total_referencia: ref?.total ?? null, total_optimizado: mejor.total,
         co2e_referencia: ref?.plan.huellaKg ?? null, co2e_optimizado: mejor.huellaKg ?? null, tiendas: mejor.tiendas,
         detalle: desglose(cat, pref.items, ref?.tipo === 'ticket' ? null : ref?.plan ?? null, mejor,
-          ALTERNATIVAS.filter((a) => aceptadas.includes(a.id)).map((a) => ({ de: a.de, a: a.a })), ref?.tipo === 'ticket'),
+          ALTERNATIVAS.filter((a) => completo && aceptadas.includes(a.id)).map((a) => ({ de: a.de, a: a.a })), ref?.tipo === 'ticket'),
         ...(completo ? { modo: 'plus' as const } : {}),
       }, idem, !completo);
       props.setEstado({ plan: r.plan, saldo: r.saldo, usadas_ciclo: r.usadas_ciclo, ciclo: r.ciclo, plan_desde: r.plan_desde });
@@ -120,7 +129,7 @@ export function Resultados(props: {
               : `Cuesta ${pesos(-ahorro)} más que ${ref.tipo === 'ticket' ? 'tu ticket' : ref.detalle}`}
           </p>
         )}
-        <p className="mt-1 text-xs text-sprout">{completo ? `Optimización completa (Plus) · prioridad ${prioridad}` : 'Comparación Gratis: precio más bajo por tienda'}</p>
+        <p className="mt-1 text-xs text-sprout">{completo ? `Modelo avanzado (Plus) · prioridad ${prioridad}` : 'Modelo básico (Gratis): la tienda más barata para toda tu lista'}</p>
         <div className="mt-3 flex flex-wrap gap-2 text-sm">
           {mejor.calidadProm != null && <span className="rounded-full bg-white/15 px-3 py-1">Calidad promedio: {nombreCalidad(mejor.calidadProm).toLowerCase()}</span>}
           {mejor.sustProm != null && <span className="rounded-full bg-white/15 px-3 py-1">Sustentabilidad S{mejor.sustProm.toFixed(1)}</span>}
@@ -146,6 +155,30 @@ export function Resultados(props: {
               </li>
             ))}
           </ul>
+        </section>
+      )}
+
+      {vistaPlus && extraMxn >= 1 && (
+        <section className="rounded-3xl border-2 border-leaf bg-white p-5">
+          <p className="text-sm font-black uppercase tracking-wide text-leaf">¿Quieres ahorrar más?</p>
+          <p className="mt-1 text-2xl font-black leading-tight text-forest">Estás dejando {pesos(extraMxn)} sobre la mesa en esta compra</p>
+          {extraKg > 0 && <p className="mt-1 font-bold text-pine">y {extraKg.toLocaleString('es-MX', { maximumFractionDigits: 1 })} kg de CO₂e que podrías evitar.</p>}
+          <p className="mt-3 text-sm font-bold text-forest">El modelo avanzado de Plus hace lo que el básico no:</p>
+          <ul className="mt-1 space-y-1 text-sm">
+            {vistaPlus.tiendas.length > 1 && <li>✓ Combina <b>{etiquetaTiendas(cat, vistaPlus.tiendas)}</b>: cada producto donde está más barato.</li>}
+            {mejoresGG.map((e) => (
+              <li key={e.id}>🔒 {cat.productos.find((p) => p.id === e.de)?.nombre} → <b>alternativa ganar-ganar</b>: ahorra {pesos(e.ahorro)} y {e.reduccion} kg CO₂e</li>
+            ))}
+            <li>✓ Sube calidad o sustentabilidad con lo que te sobre del presupuesto.</li>
+            <li>✓ Aprende de tus revisiones para que no te sobre ni te falte.</li>
+          </ul>
+          {comprasMes != null && comprasMes > 1 && (
+            <p className="mt-2 rounded-2xl bg-mint p-3 text-sm text-forest">
+              Si repites esta compra {comprasMes} veces al mes, son ≈ <b>{pesos(extraMxn * comprasMes)}</b> al mes contra {pesos(99)} de Plus (estimado).
+            </p>
+          )}
+          <button className="btn btn-primary mt-4" onClick={activarPlus}>Activar Plus y ver mi ahorro completo</button>
+          <p className="mt-2 text-xs text-muted">Calculado con los mismos precios reales de tu lista. Modo demostración: sin cobro.</p>
         </section>
       )}
 
@@ -185,7 +218,7 @@ export function Resultados(props: {
               Diferencia: <b>{pesos(ref.total - mejor.total)}</b>
               {ref.plan.huellaKg != null && mejor.huellaKg != null && <> · <b>{(ref.plan.huellaKg - mejor.huellaKg).toFixed(1)} kg CO₂e</b></>}
             </p>
-            {aceptadas.length > 0 && (
+            {completo && aceptadas.length > 0 && (
               <p className="mt-1 text-sm font-bold text-pine">
                 La optimizada incluye {aceptadas.length === 1 ? 'la alternativa' : 'las alternativas'} que aceptaste
                 ({aceptadas.map((a) => a.replace('_', ' → ')).join(', ')}); la referencia es tu lista original.
@@ -200,7 +233,7 @@ export function Resultados(props: {
         )}
       </section>
 
-      {evaluadas.length > 0 && (
+      {completo && evaluadas.length > 0 && (
         <section className="card border-leaf bg-mint">
           <p className="font-extrabold text-forest">🌱 Alternativas equivalentes</p>
           {ganaGana.length > 0 && <p className="mt-1 text-sm font-bold text-pine">Encontramos {ganaGana.length} {ganaGana.length === 1 ? 'cambio que baja' : 'cambios que bajan'} tu costo y tus emisiones a la vez{mostrables.length < evaluadas.length ? '; te mostramos los mejores por producto' : ''}.</p>}
@@ -239,13 +272,6 @@ export function Resultados(props: {
         </section>
       )}
 
-      {vistaPlus && vistaPlus.total < mejor.total - 0.5 && (
-        <section className="card border-2 border-dashed border-leaf">
-          <p className="text-sm font-bold uppercase tracking-wide text-leaf">Vista previa Plus</p>
-          <p className="mt-1">Combinando <b>{etiquetaTiendas(cat, vistaPlus.tiendas)}</b> tu lista costaría <b>{pesos(vistaPlus.total)}</b> ({pesos(mejor.total - vistaPlus.total)} menos), calculado con los mismos precios.</p>
-          <button className="mt-2 rounded-full bg-leaf px-4 py-2 font-bold text-white" onClick={props.onVerValor}>Conocer Plus</button>
-        </section>
-      )}
 
       {props.uid && (
         <section className="card">
