@@ -177,8 +177,9 @@ export function analizarTexto(texto: string, ix: Indice | Producto[]): RenglonTi
       const col = extraerColumnas(l);
       return { texto: l, productoId: id, precio: col?.total ?? extraerPrecio(l), unidades: col?.unidades ?? 1, confianza };
     })
-    // Sin producto, solo se pregunta al usuario si el renglón tiene precio y alguna palabra (no "$43.10" suelto).
-    .filter((r) => r.productoId || (r.precio != null && palabras(r.texto).length > 0));
+    // Un artículo de ticket siempre trae importe: sin precio es encabezado o basura del OCR.
+    // Sin producto, solo se pregunta al usuario si tiene precio y alguna palabra (no "$43.10" suelto).
+    .filter((r) => r.precio != null && (r.productoId || palabras(r.texto).length > 0));
 }
 
 /** Total impreso en el ticket ("TOTAL", "***Venta Total"), sin confundir con subtotal. */

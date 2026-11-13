@@ -24,11 +24,11 @@ const MARCA_ECONOMICA = /^(Great Value|Aurrera|HCF|Mi Tienda)$/i;
 const MARCA_PROPIA = /^(Great Value|Aurrera|HCF|Mi Tienda|HEB|Marketside|Kirkland Signature)$/i;
 
 function calidad(titulo, marca) {
-  if (ORGANICO.test(titulo)) return [1, 'P1 Premium: producto orgánico.'];
+  if (ORGANICO.test(titulo)) return [1, 'Calidad premium: producto orgánico.'];
   const m = titulo.match(PREMIUM);
-  if (m) return [2, `P2 Superior: atributo de valor declarado ("${m[0]}").`];
-  if (marca && MARCA_ECONOMICA.test(marca)) return [4, `P4 Económica: marca propia básica (${marca}).`];
-  return [3, marca ? `P3 Estándar: marca reconocida (${marca}).` : 'P3 Estándar: producto sin atributos adicionales.'];
+  if (m) return [2, `Calidad superior: atributo de valor declarado ("${m[0]}").`];
+  if (marca && MARCA_ECONOMICA.test(marca)) return [4, `Calidad estándar: marca propia básica (${marca}).`];
+  return [3, marca ? `Calidad normal: marca reconocida (${marca}).` : 'Calidad normal: producto sin atributos adicionales.'];
 }
 
 function sustentabilidad(titulo, huella) {

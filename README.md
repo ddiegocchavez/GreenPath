@@ -51,9 +51,9 @@ flowchart LR
 ```
 
 ## Algoritmo de despensa
-1. **Preferencias primero.** Se limita a tus supermercados, quita P4 si no quieres bajar calidad, respeta sin lactosa, vegetariano y tus marcas, y aplica las alternativas que aceptaste.
+1. **Preferencias primero.** Se limita a tus supermercados, quita la calidad estándar si no quieres bajarla, respeta sin lactosa, vegetariano y tus marcas, y aplica las alternativas que aceptaste.
 2. **Lo más barato.** Por cada producto calcula los paquetes necesarios y el costo en cada tienda.
-3. **Si sobra presupuesto** (Plus), sube calidad (P) o sustentabilidad (S) donde cada peso extra da más puntos.
+3. **Si sobra presupuesto** (Plus), sube calidad o sustentabilidad (S) donde cada peso extra da más puntos.
 4. **Si ni lo más barato alcanza,** quita paquetes del renglón más caro y te dice qué ajustó.
 5. **Compara** cada tienda sola y cada pareja (Plus). Ordena por cobertura, presupuesto, nivel y total.
 6. **Referencia justa.** Compara contra tu ticket o contra la misma lista en tu súper habitual. Si aceptaste alternativas, lo dice.
@@ -65,7 +65,7 @@ flowchart LR
 - Con el ticket real de H-E-B reconoce 6 de 6 renglones.
 
 ## Niveles y huella
-- **Calidad:** P1 Premium · P2 Superior · P3 Estándar · P4 Económica.
+- **Calidad:** Premium · Superior · Normal · Estándar (gris).
 - **Sustentabilidad:** S1 Alta · S2 Buena · S3 Convencional · S4 Alto impacto.
 - **CO₂e** = cantidad × factor por tipo de alimento (Poore & Nemecek 2018, vía Our World in Data). Se presenta como **reducción potencial**, no como emisiones evitadas comprobadas.
 

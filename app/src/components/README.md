@@ -1,6 +1,6 @@
 # components/ — Interfaz
 
-- `ui.tsx` — encabezado (botón para regresar, progreso, insignia PLUS, Mi valor y cerrar sesión), títulos, opciones e insignias P1–P4 / S1–S4.
+- `ui.tsx` — encabezado (botón para regresar, progreso, insignia PLUS, Mi valor y cerrar sesión), títulos, opciones e insignias de calidad (premium, superior, normal, estándar) y S1–S4.
 - `onboarding/Encuesta.tsx` — encuesta de una vez: uso, personas, frecuencia, gasto, problemas y qué no cambiar.
 - `onboarding/Propuesta.tsx` — diagnóstico, plan recomendado y Gratis vs Plus (demo).
 - `pasos/Inicio.tsx` — nombre y ubicación (centrados) y elegir entre lista o ticket.

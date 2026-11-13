@@ -11,6 +11,21 @@ Hackatón Monterrey · entrega **13-nov-2026 09:00 (CDMX)**.
    - **Módulos:** Eventos (recuperar del historial de git), Negocios y consumo digital (app Android).
    - **Pagos y créditos:** créditos sueltos de "Análisis individual", y pasarela de pago real con autorización.
 
+## Ticket #2, pago por análisis y calidad con nombres (13-nov-2026)
+- **Ticket real de H-E-B #2** (15 artículos, foto en el carrito):
+  - **Reconocimiento:** 15 de 15 productos, cantidades y totales, sin renglones basura. Está como prueba automática y se verificó en producción.
+  - **Lector:** ahora tolera cantidad pegada al precio ("815,50" = 8 × 15.50), decimales perdidos y palabras con una letra cambiada ("CONSONE", "Natual").
+  - **Ruido descartado:** "T0A16%", "ahorro/rebajados", montos sueltos y el pie del ticket. También se descartan renglones sin importe.
+- **Catálogo:** se agregaron miel, Salmas, queso manchego, queso cottage, bolsas de basura, Chobani/Oikos, Tomatísimo y pechuga de pavo, para un total de 283 ofertas.
+  - **Sin precio en línea:** fresa y mora azul (blueberry) frescas no se venden en línea; solo hay congeladas o rebanadas y no se comparan. Se reconocen en el ticket y se muestran como "Precio no disponible".
+- **Pago por análisis (pedido de Diego):**
+  - **Bloqueo en Gratis:** en Gratis se ven los totales por tienda, pero el detalle por producto (qué comprar en cada tienda) y guardar en el historial requieren pagar **$5 por análisis** o tener Plus.
+  - **Servidor:** lo valida `guardar_optimizacion(p, idem, p_pago_demo)` (migración `pago_por_analisis`). El precio se configura en `planes.precio_analisis_mxn`.
+  - **Modo demostración:** no hay cobro real; para cobrar hace falta conectar una pasarela de pago con autorización de Diego.
+- **Capturas de pantalla:** una web no puede bloquearlas (ningún navegador lo permite). La medida real es no mostrar el detalle en Gratis. Solo una app Android nativa podría bloquearlas, con FLAG_SECURE.
+- **Calidad con nombres:** Premium · Superior · Normal · Estándar (gris) en lugar de P1–P4. Los motivos del catálogo se regeneraron (migración `datos_catalogo_v4`).
+- **Pruebas:** `npm test` 24/24 y E2E 19/19, incluido que en Gratis no se guarda sin pagar.
+
 ## Ajustes de interfaz (13-nov-2026)
 - **"Cerrar sesión"** arriba a la derecha en las 2 primeras pantallas (nombre y ubicación).
   - Pide confirmación en pantalla, porque la cuenta es anónima: al salir empiezas de cero.

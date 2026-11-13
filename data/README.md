@@ -12,13 +12,13 @@
 - Se consultó navegando como cualquier persona, sin saltar protecciones. Los precios en tienda pueden variar.
 - **Huecos:** frutas y verduras a granel, que casi no aparecen en línea.
 
-## Calidad (P1–P4)
+## Calidad (4 niveles: premium, superior, normal, estándar)
 | Nivel | Regla (según el título o la marca) |
 |---|---|
-| P1 Premium | Dice "orgánico". |
-| P2 Superior | Atributo de valor declarado: libre pastoreo/jaula, selecto/seleccionado, premium, gourmet, artesano, griego, sirloin, supreme, extra virgen, albacora, basmati. |
-| P3 Estándar | Marca reconocida sin atributos extra (incluye las marcas propias estándar: HEB, Kirkland, Marketside). |
-| P4 Económica | Marca propia básica: Great Value, Aurrera, HCF, Mi Tienda. |
+| Premium (1) | Dice "orgánico". |
+| Superior (2) | Atributo de valor declarado: libre pastoreo/jaula, selecto/seleccionado, premium, gourmet, artesano, griego, sirloin, supreme, extra virgen, albacora, basmati. |
+| Normal (3) | Marca reconocida sin atributos extra (incluye las marcas propias estándar: HEB, Kirkland, Marketside). |
+| Estándar (4, gris) | Marca propia básica: Great Value, Aurrera, HCF, Mi Tienda. |
 
 ## Sustentabilidad (S1–S4)
 | Nivel | Regla |

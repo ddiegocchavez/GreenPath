@@ -61,12 +61,15 @@ export function Titulo({ children, sub }: { children: ReactNode; sub?: ReactNode
   );
 }
 
-const NIVEL_P = ['', 'Premium', 'Superior', 'Estándar', 'Económica'];
+/** Calidad en 4 niveles con nombre (1 = mejor). Internamente sigue siendo 1–4. */
+export const CALIDAD = ['', 'Premium', 'Superior', 'Normal', 'Estándar'] as const;
+const COLOR_P = ['', 'bg-sun/50 text-forest', 'bg-leaf text-white', 'bg-sprout text-forest', 'bg-gray-200 text-gray-600'];
+export const nombreCalidad = (n: number) => CALIDAD[Math.min(4, Math.max(1, Math.round(n)))];
 const NIVEL_S = ['', 'Alta', 'Buena', 'Convencional', 'Alto impacto'];
 const COLOR_S = ['', 'bg-leaf text-white', 'bg-sprout text-forest', 'bg-mint text-muted', 'bg-alert/15 text-alert'];
 
 export function InsigniaP({ n, motivo }: { n: number; motivo?: string }) {
-  return <span title={motivo} className="rounded-full bg-sun/30 px-2 py-0.5 text-xs font-extrabold text-forest">P{n} {NIVEL_P[n]}</span>;
+  return <span title={motivo} className={`rounded-full px-2 py-0.5 text-xs font-extrabold ${COLOR_P[n]}`}>Calidad {CALIDAD[n].toLowerCase()}</span>;
 }
 export function InsigniaS({ n, motivo }: { n: number; motivo?: string }) {
   return <span title={motivo} className={`rounded-full px-2 py-0.5 text-xs font-extrabold ${COLOR_S[n]}`}>S{n} {NIVEL_S[n]}</span>;

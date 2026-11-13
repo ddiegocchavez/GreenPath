@@ -51,7 +51,7 @@ const OPORTUNIDAD: Record<Problema, string> = {
   se_terminan: 'Calcular cuánto comprar por periodo y reservar presupuesto para reponer lo que se acaba.',
   desperdicio: 'Ajustar las cantidades de perecederos con tu revisión de fin de periodo (qué se tiró, qué sobró).',
   gasto_mas: 'Comparar tu lista en Walmart, H-E-B y Costco con precios reales antes de comprar.',
-  ahorrar_calidad: 'Buscar el menor precio sin bajar del nivel de calidad que elijas (P1–P4).',
+  ahorrar_calidad: 'Buscar el menor precio sin bajar del nivel de calidad que elijas (premium, superior, normal o estándar).',
   distribuir: 'Ajustar tu lista a un presupuesto y decirte qué recortar primero si no alcanza.',
   huella: 'Estimar la huella de tu lista con fuente científica y proponer alternativas de menor impacto.',
 };
@@ -155,7 +155,7 @@ export function aplicarPreferencias(cat: Catalogo, items: Item[], p: Perfil | nu
   }
   if (p.no_cambiar.includes('calidad')) {
     ofertas = ofertas.filter((o) => o.calidad <= 3);
-    avisos.push({ texto: 'No bajamos la calidad: excluimos productos P4 (económicos).' });
+    avisos.push({ texto: 'No bajamos la calidad: excluimos productos de calidad estándar.' });
   }
   if (p.restricciones.includes('vegetariano')) {
     const quitados = its.filter((i) => CARNES.includes(i.productoId));

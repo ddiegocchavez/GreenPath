@@ -6,7 +6,7 @@ import { mapsUrl, masCercana } from '@/lib/geo';
 import { armarPlan, etiquetaTiendas, evaluar, type Plan, type Recorte } from '@/lib/optimizar';
 import { alternativasPara, aplicarAlternativas, aplicarPreferencias, type Perfil } from '@/lib/perfil';
 import type { Catalogo, Item, Prioridad, Punto, TiendaId } from '@/lib/tipos';
-import { InsigniaP, InsigniaS, pesos } from '../ui';
+import { InsigniaP, InsigniaS, nombreCalidad, pesos } from '../ui';
 
 const UNIDAD = { pza: 'pzas', kg: 'kg', l: 'L' } as const;
 
@@ -113,7 +113,7 @@ export function Resultados(props: {
         )}
         <p className="mt-1 text-xs text-sprout">{completo ? `Optimización completa (Plus) · prioridad ${prioridad}` : 'Comparación Gratis: precio más bajo por tienda'}</p>
         <div className="mt-3 flex flex-wrap gap-2 text-sm">
-          {mejor.calidadProm != null && <span className="rounded-full bg-white/15 px-3 py-1">Calidad promedio P{mejor.calidadProm.toFixed(1)}</span>}
+          {mejor.calidadProm != null && <span className="rounded-full bg-white/15 px-3 py-1">Calidad promedio: {nombreCalidad(mejor.calidadProm).toLowerCase()}</span>}
           {mejor.sustProm != null && <span className="rounded-full bg-white/15 px-3 py-1">Sustentabilidad S{mejor.sustProm.toFixed(1)}</span>}
           {mejor.huellaKg != null && <span className="rounded-full bg-white/15 px-3 py-1">≈ {mejor.huellaKg} kg CO₂e</span>}
         </div>
@@ -264,7 +264,7 @@ export function Resultados(props: {
 
       <p className="text-xs text-muted">
         Precios consultados en línea el 12 y 13-nov-2026 en walmart.com.mx, heb.com.mx (sucursal Gonzalitos) y costco.com.mx; en tienda pueden variar.
-        Costco requiere membresía. Calidad P1–P4 y sustentabilidad S1–S4 son clasificación de GreenPath según lo que dice cada producto, no pruebas de laboratorio.
+        Costco requiere membresía. La calidad (premium, superior, normal, estándar) y la sustentabilidad S1–S4 son clasificación de GreenPath según lo que dice cada producto, no pruebas de laboratorio.
         Huella por tipo de alimento: Poore &amp; Nemecek (2018) vía Our World in Data. Sucursales: © colaboradores de OpenStreetMap.
       </p>
 
