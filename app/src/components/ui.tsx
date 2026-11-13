@@ -3,18 +3,26 @@ import type { ReactNode } from 'react';
 
 export const pesos = (n: number) => n.toLocaleString('es-MX', { style: 'currency', currency: 'MXN' });
 
-export function Encabezado({ paso, total, onAtras }: { paso?: number; total?: number; onAtras?: () => void }) {
+export function Encabezado({ paso, total, onAtras, onMiValor, plan }: {
+  paso?: number; total?: number; onAtras?: () => void; onMiValor?: () => void; plan?: 'gratis' | 'plus';
+}) {
   return (
     <header className="flex items-center gap-3 py-4">
       {onAtras ? (
         <button onClick={onAtras} className="rounded-full bg-white px-3 py-1 font-bold text-forest border border-mint" aria-label="Atrás">←</button>
       ) : <span className="text-2xl" aria-hidden>🌿</span>}
       <span className="text-xl font-black text-forest">GreenPath</span>
-      {paso && total ? (
-        <div className="ml-auto h-3 w-28 overflow-hidden rounded-full bg-mint" aria-label={`Paso ${paso} de ${total}`}>
-          <div className="h-full rounded-full bg-leaf transition-all" style={{ width: `${(paso / total) * 100}%` }} />
-        </div>
-      ) : null}
+      {plan === 'plus' && <span className="rounded-full bg-sun/40 px-2 py-0.5 text-xs font-black text-forest">PLUS</span>}
+      <div className="ml-auto flex items-center gap-2">
+        {paso && total ? (
+          <div className="h-3 w-20 overflow-hidden rounded-full bg-mint" aria-label={`Paso ${paso} de ${total}`}>
+            <div className="h-full rounded-full bg-leaf transition-all" style={{ width: `${(paso / total) * 100}%` }} />
+          </div>
+        ) : null}
+        {onMiValor && (
+          <button onClick={onMiValor} className="rounded-full border border-mint bg-white px-3 py-1 text-sm font-bold text-forest" aria-label="Mi valor GreenPath">📊 Mi valor</button>
+        )}
+      </div>
     </header>
   );
 }

@@ -5,7 +5,8 @@ import type { Catalogo } from './tipos';
 const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const key = process.env.NEXT_PUBLIC_SUPABASE_KEY;
 
-export const supabase = url && key ? createClient(url, key, { auth: { persistSession: false } }) : null;
+// La sesión (cuenta anónima) se guarda en el navegador para conservar perfil, historial y créditos.
+export const supabase = url && key ? createClient(url, key) : null;
 
 export async function cargarCatalogo(): Promise<Catalogo> {
   if (!supabase) throw new Error('Faltan NEXT_PUBLIC_SUPABASE_URL / NEXT_PUBLIC_SUPABASE_KEY.');
