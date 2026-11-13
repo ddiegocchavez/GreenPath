@@ -104,7 +104,7 @@ export default function RewardsScreen() {
         <View style={styles.statsRow}>
           <View style={styles.stat}>
             <Icon name="check" size={30} color={colors.forest} />
-            <View><Text style={styles.statLabel}>Retos completados</Text><Text style={styles.statValue}>{done.length}</Text></View>
+            <View style={{ flex: 1 }}><Text style={styles.statLabel}>Retos completados</Text><Text style={styles.statValue}>{done.length}</Text></View>
           </View>
           <View style={styles.statDivider} />
           <View style={styles.stat}>
@@ -192,9 +192,9 @@ const styles = StyleSheet.create({
   body: { fontFamily: fonts.regular, fontSize: 15, color: colors.text, lineHeight: 21 },
   card: { backgroundColor: '#FFF', borderRadius: radius.lg, borderWidth: 1, borderColor: '#D9E8DD', padding: space.lg, marginBottom: space.lg },
   statsRow: { flexDirection: 'row', alignItems: 'center' },
-  stat: { flex: 1, flexDirection: 'row', alignItems: 'center', gap: space.md },
+  stat: { flex: 1, flexDirection: 'row', alignItems: 'center', gap: space.sm, paddingRight: space.sm },
   statDivider: { width: 1, alignSelf: 'stretch', backgroundColor: '#E1ECE4', marginHorizontal: space.sm },
-  statLabel: { fontFamily: fonts.regular, fontSize: 15, color: colors.text },
+  statLabel: { fontFamily: fonts.regular, fontSize: 14, color: colors.text, flexShrink: 1 },
   statValue: { fontFamily: fonts.bold, fontSize: 32, color: colors.forest },
   track: { height: 8, borderRadius: radius.pill, backgroundColor: colors.mint, overflow: 'hidden', marginTop: space.md },
   fill: { height: 8, borderRadius: radius.pill, backgroundColor: colors.leaf },

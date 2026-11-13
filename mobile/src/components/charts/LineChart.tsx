@@ -45,8 +45,11 @@ export default function LineChart({ points, height = 220, format = (v: number) =
           {drawn.map((d) => (
             <Circle key={d.label} cx={d.cx} cy={d.cy} r={5.5} fill={colors.leaf} />
           ))}
-          {drawn.map((d) => (
-            <SvgText key={`${d.label}-v`} x={d.cx} y={d.cy - 12} fontSize={12} fontWeight="bold" fill={colors.forest} textAnchor="middle">
+          {drawn.map((d, i) => (
+            // Si la línea llega desde más arriba, la etiqueta va debajo del punto para no encimarse.
+            <SvgText key={`${d.label}-v`} x={d.cx} y={i > 0 && drawn[i - 1].cy < d.cy ? d.cy + 22 : d.cy - 12}
+              fontSize={12} fontWeight="bold" fill={colors.forest}
+              textAnchor={i === drawn.length - 1 && drawn.length > 1 ? 'end' : 'middle'}>
               {d.caption ?? format(d.value as number)}
             </SvgText>
           ))}

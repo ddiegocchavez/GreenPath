@@ -6,6 +6,7 @@ export const INGREDIENTS = ['Tortillas', 'Huevo', 'Tomate', 'Cebolla', 'Frijoles
 export type Ingredient = typeof INGREDIENTS[number];
 export type Recipe = { name: string; ingredients: Ingredient[]; tip: string };
 export const RECIPES: Recipe[] = [
+  { name: 'Bowl de frijoles y verduras', ingredients: ['Frijoles', 'Arroz', 'Tomate', 'Cebolla'], tip: 'Una comida completa con legumbres y lo que tengas de verdura.' },
   { name: 'Huevos a la mexicana', ingredients: ['Huevo', 'Tomate', 'Cebolla'], tip: 'Aprovecha el tomate maduro antes de que se eche a perder.' },
   { name: 'Tacos de frijoles', ingredients: ['Tortillas', 'Frijoles'], tip: 'Usa las tortillas y frijoles que ya tienes.' },
   { name: 'Arroz con lentejas', ingredients: ['Arroz', 'Lentejas', 'Cebolla'], tip: 'Una opción de legumbres sin comprar carne.' },

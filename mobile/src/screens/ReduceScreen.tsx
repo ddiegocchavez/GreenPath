@@ -40,7 +40,7 @@ export default function ReduceScreen() {
       setRecs(filterForUser(r, p));
       setChosen(new Set(c.filter((x) => x.status !== 'descartada').map((x) => x.recommendation_id)));
       const best = suggestRecipes(pantry)[0];
-      setRecipe(best ? { ...best, ingredients: [...best.ingredients] } : { ...RECIPES[1], ingredients: [...RECIPES[1].ingredients], missing: [...RECIPES[1].ingredients] });
+      setRecipe(best ? { ...best, ingredients: [...best.ingredients] } : { ...RECIPES[0], ingredients: [...RECIPES[0].ingredients], missing: [...RECIPES[0].ingredients] });
     } catch (e) {
       Alert.alert('No se pudo cargar', e instanceof Error ? e.message : String(e));
     }
@@ -111,12 +111,14 @@ export default function ReduceScreen() {
       {recipe && (
         <View style={styles.recipeCard}>
           <Image source={require('../../assets/hero-reducir.jpg')} style={styles.recipeImg} resizeMode="cover" />
+          {recipe.name !== RECIPES[0].name && <Text style={styles.imgNote}>Imagen ilustrativa</Text>}
           <View style={styles.recipeHead}>
             <Text style={styles.recipeTitle}>{recipe.name}</Text>
             <Text style={styles.badge}>{recipe.missing.length === 0 ? 'Tienes todo' : `Te faltan ${recipe.missing.length}`}</Text>
           </View>
           <Text style={styles.body}>
-            {have.length ? `Usa tus ${have.join(', ').toLowerCase()}.` : `Ingredientes: ${recipe.ingredients.join(', ').toLowerCase()}.`}
+            {have.length ? `Usa lo que ya tienes: ${have.join(', ').toLowerCase()}.` : `Ingredientes: ${recipe.ingredients.join(', ').toLowerCase()}.`}
+            {have.length && recipe.missing.length ? ` Te falta: ${recipe.missing.join(', ').toLowerCase()}.` : ''}
           </Text>
           <Text style={styles.small}>{have.length ? recipe.tip : 'Marca lo que tienes en Mi despensa para sugerencias a tu medida.'}</Text>
           <Pressable onPress={() => setOpen('food')} style={styles.primary} accessibilityRole="button">
@@ -146,7 +148,7 @@ export default function ReduceScreen() {
                 <Text style={styles.detailLabel}>Qué hacer</Text><Text style={styles.body}>{r.what_to_do}</Text>
                 <Text style={styles.detailLabel}>Por qué</Text><Text style={styles.body}>{r.why}</Text>
                 <Text style={styles.detailLabel}>Datos y supuestos</Text><Text style={styles.small}>{r.data_and_assumptions}</Text>
-                <Text style={styles.small}>Impacto: {r.impact_note} · Esfuerzo: {EFFORT_LABEL[r.effort].toLowerCase()} · {r.cost_level === 'sin_gasto' ? 'Sin gasto' : `Costo ${r.cost_level}`}{r.cost_note ? ` · ${r.cost_note}` : ''}</Text>
+                <Text style={styles.small}>Impacto: {r.impact_note} · Esfuerzo: {EFFORT_LABEL[r.effort].toLowerCase()} · {r.cost_note ?? (r.cost_level === 'sin_gasto' ? 'Sin gasto' : `Costo ${r.cost_level}`)}</Text>
                 {r.sources.map((s) => (
                   <Pressable key={s.url} onPress={() => Linking.openURL(s.url)}><Text style={styles.source}>Fuente: {s.title} ↗</Text></Pressable>
                 ))}
@@ -193,6 +195,7 @@ const styles = StyleSheet.create({
   section: { fontFamily: fonts.semibold, fontSize: 20, color: colors.forest, marginBottom: space.md },
   recipeCard: { backgroundColor: '#FFF', borderRadius: radius.lg, borderWidth: 1, borderColor: '#D9E8DD', padding: space.md, marginBottom: space.xl },
   recipeImg: { width: '100%', height: 200, borderRadius: radius.md },
+  imgNote: { position: 'absolute', top: space.md + 8, left: space.md + 8, backgroundColor: 'rgba(15,61,46,0.75)', color: '#FFF', fontFamily: fonts.semibold, fontSize: 12, paddingHorizontal: 8, paddingVertical: 3, borderRadius: radius.sm, overflow: 'hidden' },
   recipeHead: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: space.md, gap: space.sm },
   recipeTitle: { fontFamily: fonts.semibold, fontSize: 20, color: colors.forest, flex: 1 },
   badge: { backgroundColor: colors.mint, color: colors.forest, fontFamily: fonts.semibold, paddingHorizontal: 12, paddingVertical: 5, borderRadius: radius.pill, overflow: 'hidden' },

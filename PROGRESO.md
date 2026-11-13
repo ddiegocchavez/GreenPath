@@ -51,7 +51,10 @@ Mockups en `docs/producto/mockups/*-v3.png`; fotos recortadas en `mobile/assets/
 - Migración `20261113002742_seed_catalog.sql`: eventos (carne asada, fiesta) y 5 recomendaciones.
 - Cerrar sesión: ícono de perfil del encabezado.
 - La calculadora eléctrica manual ya no aparece en Mi impacto (no está en el diseño); la función sigue en `features/carbon.ts`.
-- ✅ `tsc` sin errores. 📋 **Pendiente verificar en el emulador** (Metro detenido por falta de memoria).
+- ✅ `tsc` sin errores.
+- ✅ **Verificado en el emulador:** Mi impacto (Hoy / Semana con datos de Supabase: 18 h 8 min en 6 días, YouTube e Instagram), Reducir (preferencias reales, receta de la despensa, alternativas desplegables con fuente), "Esto sí va conmigo" → aparece como próximo reto en Mi progreso → "Hecho" → Retos completados 1. Gráfica semanal con datos reales (incluye demo, etiquetado).
+- Ajustes tras la prueba: receta nueva "Bowl de frijoles y verduras" (coincide con la foto) y etiqueta "Imagen ilustrativa" para otras recetas; texto "Usa lo que ya tienes: … Te falta: …"; etiquetas de la gráfica sin encimarse; "Retos completados" sin chocar con el divisor.
+- Nota: el emulador usa hora UTC; en un teléfono con hora de México "Hoy" corresponde al día local.
 
 ## UI actualizada desde ZIP (`GreenPath_v2_UI_actualizada.zip`) · 2026-11-12
 
