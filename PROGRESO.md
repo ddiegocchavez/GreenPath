@@ -32,6 +32,27 @@ Cambios recibidos (carpeta `coolproject-main`), revisados e integrados. Solo 19 
 - Arreglo propio: la barra "← Volver a Reducir" se encimaba con el reloj del teléfono. Ahora `Screen` acepta `onBack`/`backLabel` y el botón vive dentro del área segura.
 - ⚠️ Precios y porciones de eventos son de demostración. Los eventos y la despensa no se sincronizan con Supabase.
 
+## UI v3 según mockups (`Downloads/IMPACTO`, `REDUCIR`, `PROGRESO`) · 2026-11-12
+
+Mockups en `docs/producto/mockups/*-v3.png`; fotos recortadas en `mobile/assets/hero-*.jpg`. Los mockups traían **datos de ejemplo**; se conectaron a datos reales:
+
+| Elemento del mockup | Dato real |
+|---|---|
+| Mi impacto · Hoy / Semana, apps | `usage_daily` (hoy, del lector; semana, de Supabase) |
+| Mi impacto · Alimentación "3.2 kg CO₂e" | CO₂e estimado de **eventos registrados** (comprado) o del plan del último evento; si no hay, "Sin registros" |
+| Mi impacto · Digital | "Pendiente" |
+| Reducir · Tus preferencias + Editar | Tabla `preferences` (editable) |
+| Reducir · receta | Despensa local + `food.ts` (sin precio inventado) |
+| Reducir · Alternativas para ti | Tabla `recommendations` (seed nuevo, 5 con fuente o "No cuantificado"), filtradas por esfuerzo y presupuesto; "Esto sí va conmigo" → `user_choices` |
+| Mi progreso · gráfica kg CO₂e/semana (ejemplo) | **Uso promedio por día por semana** (`v_daily_activity`, medido; no CO₂e) |
+| Mi progreso · retos y puntos | `user_choices` (realizadas) y `points_ledger`; reclamar puntos se conserva |
+
+- Nuevos: `components/ui/Icon.tsx` (íconos SVG basados en Lucide, ISC), `AppHeader.tsx`, `charts/LineChart.tsx`, `features/progress/{progress,foodSummary}.ts`, `features/preferences/preferences.ts`, `features/recommendations/recommendations.ts`.
+- Migración `20261113002742_seed_catalog.sql`: eventos (carne asada, fiesta) y 5 recomendaciones.
+- Cerrar sesión: ícono de perfil del encabezado.
+- La calculadora eléctrica manual ya no aparece en Mi impacto (no está en el diseño); la función sigue en `features/carbon.ts`.
+- ✅ `tsc` sin errores. 📋 **Pendiente verificar en el emulador** (Metro detenido por falta de memoria).
+
 ## UI actualizada desde ZIP (`GreenPath_v2_UI_actualizada.zip`) · 2026-11-12
 
 - **Reducir** rediseñado según mockup: "Reduce tu huella 🌱", 4 accesos rápidos (Alimentación, Consumo digital, Mi despensa, Mis eventos), foto de evento, tarjeta "Carne asada · Personalizable" y consejo.
