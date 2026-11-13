@@ -164,22 +164,36 @@ const RUIDO = new RegExp([
   'total', 'subtotal', 'iva', '\\b[it1l][o0u]a\\s?1?\\d\\s?%', 'venta', 'cambio', 'efectivo', 'tarjeta', 'pago', 'articulo', 'gracias', 'rfc',
   'ticket', 'folio', 'caja', 'fecha', 'cuenta', 'autoriza', 'comentar', 'precios', 'prosa', 'visa', 'master', 'banamex', 'bbva', 'santander',
   'ahorr', 'rebajad', 'promocion', 'factur', 'solicite', 'cajero', 'atendio', 'supermercados', 'sucursal',
+  'estaciona', 'ieps', 'teps', 'descuento', 'autor', 'mercados', 'internacionales',
 ].join('|'), 'i');
+
+const INICIO_BLOQUE = /articulo\b.*(cant|pre)|\bcant\b.*\bpre/;
+const FIN_BLOQUE = /articulos? compr|subtotal/;
+// Renglones de promoción ("2X99 EN HELADOS…", que el OCR lee "2499 EN" o "2)99 EN").
+const PROMO = /\b\d[\dx ]{1,4}\d\s+en\s/;
+const CONFIANZA_SIN_PRECIO = 0.5;
 
 export function analizarTexto(texto: string, ix: Indice | Producto[]): RenglonTicket[] {
   const indice = Array.isArray(ix) ? construirIndice(ix, []) : ix;
-  return texto
-    .split(/\r?\n/)
-    .map((l) => l.trim())
-    .filter((l) => l.length >= 3 && !RUIDO.test(normalizar(l)))
+  let lineas = texto.split(/\r?\n/).map((l) => l.trim());
+  // Si se reconoce el bloque de artículos (ARTICULO CANT… → ARTICULOS COMPRADOS), solo se lee ese bloque:
+  // el encabezado y el pie del ticket nunca son productos. Dentro del bloque, un producto con coincidencia
+  // fuerte se conserva aunque el OCR no haya podido leer su precio (el usuario lo completa en la revisión).
+  const ini = lineas.findIndex((l) => INICIO_BLOQUE.test(normalizar(l)));
+  const fin = ini >= 0 ? lineas.findIndex((l, i) => i > ini && FIN_BLOQUE.test(normalizar(l))) : -1;
+  const enBloque = ini >= 0 && fin > ini;
+  if (enBloque) lineas = lineas.slice(ini + 1, fin);
+  return lineas
+    .filter((l) => l.length >= 3 && !RUIDO.test(normalizar(l)) && !PROMO.test(normalizar(l)))
     .map((l) => {
       const { id, confianza } = emparejar(l, indice);
       const col = extraerColumnas(l);
       return { texto: l, productoId: id, precio: col?.total ?? extraerPrecio(l), unidades: col?.unidades ?? 1, confianza };
     })
-    // Un artículo de ticket siempre trae importe: sin precio es encabezado o basura del OCR.
+    // Fuera del bloque, un artículo siempre trae importe (sin precio es encabezado o basura del OCR).
     // Sin producto, solo se pregunta al usuario si tiene precio y alguna palabra (no "$43.10" suelto).
-    .filter((r) => r.precio != null && (r.productoId || palabras(r.texto).length > 0));
+    .filter((r) => (r.productoId && (r.precio != null || (enBloque && r.confianza >= CONFIANZA_SIN_PRECIO)))
+      || (!r.productoId && r.precio != null && palabras(r.texto).length > 0));
 }
 
 /** Total impreso en el ticket ("TOTAL", "***Venta Total"), sin confundir con subtotal. */

@@ -11,6 +11,19 @@ Hackatón Monterrey · entrega **13-nov-2026 09:00 (CDMX)**.
    - **Módulos:** Eventos (recuperar del historial de git), Negocios y consumo digital (app Android).
    - **Pagos y créditos:** créditos sueltos de "Análisis individual", y pasarela de pago real con autorización.
 
+## Tickets H-E-B #3 y #4 (13-nov-2026, madrugada)
+- **#3** (frutas y verduras): **4/4** con precio (aguacate, plátano, pepino, limón). El "Cobro Estacionamiento" se descarta.
+- **#4** (foto difícil: dedo, ángulo y brillo): el OCR pierde varios precios. El lector reconoce 13 renglones de producto.
+  - **"MLD DULCE DE LECNE":** queda en "¿Qué es esto?" para que el usuario lo enseñe.
+  - **El champiñón:** se pierde, porque el OCR lo leyó "Gunyo eco".
+  - **Precios mal leídos:** algunos salen mal (pepino 39.09 en lugar de 39.29; galletas 31.0 en lugar de 37.90). El usuario los corrige en la revisión.
+- **Lector:**
+  - **Bloque de artículos:** si detecta el bloque ("ARTICULO CANT…" → "ARTICULOS COMPRADOS"), solo lee ahí; el encabezado y el pie nunca cuentan.
+  - **Productos sin precio legible:** dentro del bloque, un producto con coincidencia fuerte (confianza ≥ 0.5) se conserva aunque no se lea su precio.
+  - **Ruido nuevo:** promociones ("2X99 EN…", que el OCR lee "2499 EN" o "2)99 EN"), estacionamiento, IEPS y descuento.
+- **Catálogo: 56 productos.** 10 nuevos **sin precio todavía** (limón, plátano, pepino, espinaca, champiñón, helado, queso feta, galletas multigrano, shampoo, ron). Se reconocen en el ticket y muestran "Precio no disponible". La extensión de Chrome estaba desconectada para capturar sus precios.
+- **Pruebas:** `npm test` **42/42**, con los 4 tickets reales de H-E-B como pruebas automáticas (sin datos de cuenta ni folios).
+
 ## Cuatro modalidades: Gratis, Individual, Flex y Plus (13-nov-2026)
 | Plan | Precio (demo) | Análisis completos |
 |---|---|---|

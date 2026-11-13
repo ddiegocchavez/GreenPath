@@ -51,4 +51,15 @@ export const productos = [
   // Sin precio en línea (fruta fresca): se reconocen en el ticket y se muestra "Precio no disponible".
   ['fresa', 'Fresa', 'Frutas y verduras', 'kg', ['fresa', 'fresas'], 1.53, 'fresa'],
   ['mora_azul', 'Mora azul (blueberry)', 'Frutas y verduras', 'kg', ['blueberry', 'blueberries', 'mora azul', 'arandano'], 1.53, 'blueberry'],
+  // Tickets H-E-B #3 y #4 (13-nov). Sin precio en línea todavía: se reconocen y se muestra "Precio no disponible".
+  ['limon', 'Limón', 'Frutas y verduras', 'kg', ['limon', 'limones', 'limon agrio'], 0.39, 'limon'],
+  ['platano', 'Plátano', 'Frutas y verduras', 'kg', ['platano', 'platanos', 'banana'], 0.86, 'platano'],
+  ['pepino', 'Pepino', 'Frutas y verduras', 'kg', ['pepino', 'pepinos'], 0.53, 'pepino'],
+  ['espinaca', 'Espinaca', 'Frutas y verduras', 'kg', ['espinaca', 'espinacas'], 0.53, 'espinaca baby'],
+  ['champinon', 'Champiñón', 'Frutas y verduras', 'kg', ['champinon', 'champinones', 'champ'], 0.53, 'champinon'],
+  ['helado', 'Helado', 'Huevo y lácteos', 'l', ['helado', 'helados', 'nieve'], null, 'helado'],
+  ['queso_feta', 'Queso feta', 'Huevo y lácteos', 'kg', ['feta', 'queso feta'], 23.88, 'queso feta'],
+  ['galletas_saladas', 'Galletas saladas / multigrano', 'Granos y cereales', 'kg', ['multigrano', 'crackers', 'galletas saladas'], null, 'galletas multigrano'],
+  ['shampoo', 'Shampoo', 'Cuidado personal', 'l', ['shampoo', 'champu', 'mennen'], null, 'shampoo'],
+  ['ron', 'Ron', 'Vinos y licores', 'l', ['ron', 'bacardi'], null, 'ron'],
 ];

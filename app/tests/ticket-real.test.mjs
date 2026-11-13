@@ -134,3 +134,96 @@ test('correcciones del usuario ganan', () => {
   const ix2 = construirIndice(productos, ofertas, { 'molida pulpa negra molida': 'pollo' });
   assert.equal(emparejar('MOLIDA PULPA NEGRA MOLIDA 1 164.00 164.00', ix2).id, 'pollo');
 });
+
+// Tickets H-E-B #3 y #4 (fotos de Diego, 13-nov). Salida REAL de Tesseract; datos de cuenta, autorización y folios removidos.
+const HEB3_OCR = `COBRO —
+a
+Aracias por sus comentarios: 68
+conentariosGhebnex,con
+ARTÍCULO CANT, —PRE.UNIT TOTAL |
+AGUACATE EXTRA 1 72.43 72.43
+PLATANO 1 25,85 25,85
+PEPINO FRESCO 1 29.64 29.64
+LIMON ABRIO SUPREMO 1 21.48 21.48
+Cobro Estacionaniento 1 3.00 3.00
+ARTICULOS COMPRADOS: —5 Venta Subtotal 152.40
+Venta Total 152.40 Jubt
+CB PROSA 152.40
+Cajero:680 Cajero Autocobro H10
+Total H.N. 152.40
+ooo SOOE Oo
+La | |
+boo
+| .ES
+197]
+Le Atendio:Cajero Autocobro 10 pan
+dao o S
+SUP MERCADOS INTERNACIONALES HEB, SA de 99,
+La AFC: STH951127977 a _—- uE |
+
+`;
+const HEB4_OCR = `AUTO
+COBRO
+a (1-5) E
+gracias por sus conentartos: —_
+conentarioshebnex.con
+ARTICULO CANT. -—PRE.UNIT TOTAL ES
+LIMON ABRIO SUPRENO | anáp. 242 NA
+PEPINO FRESCO: 17002 39.09 CS
+VGTLS ESPINACA BBY 1250 134.06 34.00 EN u «
+HEB TIN MULTIGRAN 1 31.90 31.0 EN é
+" HEB CREANY CREA HELADO CO 165.00 65.00 “ANA
+y 2499 EN HELADOS HEB CREAN CREATION DE ESO
+MLD DULCE DE LECNE 165.00 65.00 y E UN
+2)99 EN HELADOS HEB CREANY CREATIONS DE E a Y
+| SHAMPOO MENNEN an sn MU PU
+sh Nennen 2ent 7001 1 AD ES s 1 e
+qON BACARDI BLANCO 700 M. + 206.00 206.0 E D
+Dechuga de Pavo SRF 2509 1 81.9 81.90 Y (
+E Gunyo eco ENTERO 275 6A CI UN A
+qUESO FETA CHUNK 1 g10.00 110.00 __ NU y
+GLORTA MANTEQUILLA BARRA (25 20 E L E
+LA FINA SAL VODADA FLUORY 93,50 33.50 Ny -
+AGUACATE EXTRA ; MOB _ E
+Cobro Estacionamiento 1 45.00 15.00 EZ a
+h ARTICULOS coNRADOS: 16 vente subtotal -—- 816.57 o —_—
+TEPS3% 61,52 /
+. > TUI us DA —]
+——— auaVenta Total 921.07 ——
+— DESCUENTO 31.00 uu
+Total despues de Ahorro 890.07 — - — E -
+No. cuante:wresovereme:T060 paa o y >
+mios A “
+— me j ;
+. > q N -
+21077 , a .
+A < + "A
+REC *
+- > E
+2 MA m %
+Y é 7 — ro 7
+4 8 ( A E MAL
+“r
+- a ,
+La _ b
+y S 4
+— “ ”
+
+`;
+
+test('ticket H-E-B #3: frutas y verduras, sin el cobro de estacionamiento', () => {
+  const r = analizarTexto(HEB3_OCR, ix);
+  assert.deepEqual(r.map((x) => [x.productoId, x.precio]), [['aguacate', 72.43], ['platano', 25.85], ['pepino', 29.64], ['limon', 21.48]]);
+  assert.equal(extraerTotal(HEB3_OCR), 152.4);
+});
+
+test('ticket H-E-B #4 (foto difícil): solo el bloque de artículos; productos sin precio legible se conservan para completarlos', () => {
+  const r = analizarTexto(HEB4_OCR, ix);
+  assert.deepEqual(r.filter((x) => x.productoId).map((x) => x.productoId), ['limon', 'pepino', 'espinaca', 'galletas_saladas', 'helado',
+    'shampoo', 'shampoo', 'ron', 'jamon', 'queso_feta', 'mantequilla', 'sal', 'aguacate']);
+  // Sin producto pero con precio: se pregunta al usuario (y aprende de su respuesta).
+  assert.deepEqual(r.filter((x) => !x.productoId).map((x) => x.precio), [65]);
+  // Nada del encabezado ni del pie (gracias, totales, autorización, dirección).
+  assert.ok(!r.some((x) => /gracias|total|autor|mercados/i.test(x.texto)));
+  assert.equal(extraerTotal(HEB4_OCR), 890.07); // "Total después de ahorro" es lo que se pagó
+});
