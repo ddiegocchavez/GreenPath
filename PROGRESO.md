@@ -11,6 +11,25 @@ Hackatón Monterrey · entrega **13-nov-2026 09:00 (CDMX)**.
    - **Módulos:** Eventos (recuperar del historial de git), Negocios y consumo digital (app Android).
    - **Pagos y créditos:** créditos sueltos de "Análisis individual", y pasarela de pago real con autorización.
 
+## Comparación justa y Plus con valor medible (13-nov-2026)
+**Errores encontrados y corregidos (inflaban el ahorro):**
+1. **Recorte automático:** si el presupuesto no alcanzaba, la app quitaba paquetes y comparaba el ticket completo contra la lista recortada. **Ahora:** no se recorta nada en automático. Se advierte cuánto falta, se propone un ajuste y solo se aplica si el usuario lo acepta; en ese caso ambas listas usan la versión ajustada.
+2. **Faltantes como ahorro:** un producto sin precio en línea (fresa, blueberry) bajaba el total "optimizado". **Ahora:** `compararCubiertos` solo suma productos con precio en ambas listas y muestra aparte los que no se comparan. Eso es lo que se guarda (`productos_excluidos`).
+
+**Plus = análisis más profundo, medido con los mismos datos:**
+- **"Lo que te dio Plus en esta compra":** modelo básico (la tienda más barata para todo, sin alternativas) contra el resultado Plus, en pesos y CO₂e, sobre la misma lista y precios. Se guarda como `ahorro_adicional_plus` y se suma en Mi valor.
+- **Distribución del presupuesto:** por categoría, con sobrante o faltante. Si al usuario se le terminan productos, sugiere reservar lo que sobra para reponer.
+- **Prevención de desperdicio:** la siguiente despensa ajusta cantidades con la revisión (solo Plus); Gratis ve el aviso de que Plus lo haría.
+- **Revisión del periodo:** al volver a la app, si la última despensa guardada no tiene revisión, se preguntan 3 cosas: qué se terminó, qué sobró y qué se desperdició (`components/RevisionRapida.tsx`).
+
+**Pruebas:**
+- `npm test` **36/36**. Nuevas: Gratis vs Plus con los mismos datos (Plus nunca peor, extra medible), una compra incompleta no es ahorro, el ajuste a presupuesto se compara sobre la misma lista, comparación justa y distribución del presupuesto.
+- E2E contra Supabase **19/19**.
+- Tipos y lint sin errores.
+- **Falta verificar en el navegador:** la extensión de Chrome se desconectó antes de probar este flujo en producción.
+
+**Pendiente:** ajustar cantidades por número de personas sin historial requeriría datos de consumo por persona con fuente, y no los inventamos. Hoy las cantidades se ajustan con el historial de revisiones del propio usuario.
+
 ## Gratis vs Plus: "¿Quieres ahorrar más? Paga más" (13-nov-2026)
 - **Modelo básico (Gratis):** la tienda más barata para toda tu lista. No combina tiendas ni aplica alternativas.
 - **Modelo avanzado (Plus):** combina tiendas, aplica alternativas ganar-ganar (ver cuáles y aceptarlas), sube calidad o sustentabilidad con el presupuesto y aprende de las revisiones.

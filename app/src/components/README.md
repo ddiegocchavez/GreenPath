@@ -10,3 +10,4 @@
 - `pasos/Resultados.tsx` — recomendado, preferencias aplicadas, lista habitual vs optimizada, alternativas, vista previa de Plus, guardar, tiendas de menor a mayor y combinaciones.
 - `MiValor.tsx` — estimado vs comprobado vs demo, huella, historial, revisión del periodo, créditos, plan y tus datos.
 - `Dashboard.tsx` — reducción por producto en cada despensa (pesos y kg CO₂e): KPIs, barras y tabla.
+- `RevisionRapida.tsx` — revisión del periodo al volver (agotados, sobrantes, desperdiciados).
