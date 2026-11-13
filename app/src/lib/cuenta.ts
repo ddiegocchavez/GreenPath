@@ -1,6 +1,7 @@
 /** Cuenta anónima, perfil, plan (demo), créditos, historial y revisiones en Supabase (todo protegido por RLS). */
 import { supabase } from './supabase';
 import type { Perfil, Revision } from './perfil';
+import type { FilaDetalle } from './impacto';
 import type { Item } from './tipos';
 
 export type Estado = { plan: 'gratis' | 'plus'; saldo: number; usadas_ciclo: number; ciclo: string; plan_desde?: string | null };
@@ -9,7 +10,7 @@ export type Optimizacion = {
   id: string; creada_en: string; modo: 'gratis' | 'plus'; origen: 'lista' | 'ticket'; items: Item[];
   presupuesto: number | null; prioridad: string | null; referencia_tipo: string; referencia_detalle: string | null;
   total_referencia: number | null; total_optimizado: number; co2e_referencia: number | null; co2e_optimizado: number | null;
-  tiendas: string[]; gasto_real: number | null; pagado_demo_mxn: number | null;
+  tiendas: string[]; gasto_real: number | null; pagado_demo_mxn: number | null; detalle: FilaDetalle[] | null;
 };
 export type Movimiento = { id: number; creado_en: string; tipo: string; cantidad: number; detalle: string | null };
 export type RevisionGuardada = Revision & { id: string; optimizacion_id: string | null; creada_en: string; costo_desperdicio: number | null };

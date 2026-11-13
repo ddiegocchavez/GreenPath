@@ -9,6 +9,7 @@ import {
   type Estado, type Movimiento, type Optimizacion, type Plan, type RevisionGuardada,
 } from '@/lib/cuenta';
 import type { Catalogo } from '@/lib/tipos';
+import { Dashboard } from './Dashboard';
 import { pesos, Titulo } from './ui';
 
 const ETIQUETA = {
@@ -94,6 +95,8 @@ export function MiValor({ uid, cat, planes, estado, setEstado, onEditarPerfil, o
           </>
         )}
       </section>
+
+      <Dashboard opts={opts} />
 
       {/* Resumen económico y ambiental */}
       <section className="card">

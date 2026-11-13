@@ -4,7 +4,8 @@ import { useMemo, useState } from 'react';
 import { actualizarAlternativas, guardarOptimizacion, type Estado } from '@/lib/cuenta';
 import { mapsUrl, masCercana } from '@/lib/geo';
 import { armarPlan, etiquetaTiendas, evaluar, type Plan, type Recorte } from '@/lib/optimizar';
-import { alternativasPara, aplicarAlternativas, aplicarPreferencias, type Perfil } from '@/lib/perfil';
+import { ALTERNATIVAS, alternativasPara, aplicarAlternativas, aplicarPreferencias, type Perfil } from '@/lib/perfil';
+import { desglose, siguienteTip, tipsPara, type Tip } from '@/lib/impacto';
 import type { Catalogo, Item, Prioridad, Punto, TiendaId } from '@/lib/tipos';
 import { InsigniaP, InsigniaS, nombreCalidad, pesos } from '../ui';
 
@@ -79,6 +80,8 @@ export function Resultados(props: {
         referencia_tipo: ref?.tipo ?? 'sin_referencia', referencia_detalle: ref?.detalle ?? null,
         total_referencia: ref?.total ?? null, total_optimizado: mejor.total,
         co2e_referencia: ref?.plan.huellaKg ?? null, co2e_optimizado: mejor.huellaKg ?? null, tiendas: mejor.tiendas,
+        detalle: desglose(cat, pref.items, ref?.tipo === 'ticket' ? null : ref?.plan ?? null, mejor,
+          ALTERNATIVAS.filter((a) => aceptadas.includes(a.id)).map((a) => ({ de: a.de, a: a.a })), ref?.tipo === 'ticket'),
         ...(completo ? { modo: 'plus' as const } : {}),
       }, idem, !completo);
       props.setEstado({ plan: r.plan, saldo: r.saldo, usadas_ciclo: r.usadas_ciclo, ciclo: r.ciclo, plan_desde: r.plan_desde });
@@ -139,6 +142,8 @@ export function Resultados(props: {
           </ul>
         </section>
       )}
+
+      <TipCO2 cat={cat} items={pref.items} />
 
       {pref.avisos.length > 0 && (
         <section className="card !p-4 text-sm">
@@ -355,5 +360,40 @@ function Bloqueado({ precio, oscuro }: { precio: number; oscuro?: boolean }) {
       <p className="font-extrabold text-forest">Detalle por producto bloqueado</p>
       <p className="text-sm text-muted">Qué marca y presentación comprar en cada tienda. Desbloquéalo por {pesos(precio)} (demo) o con Plus.</p>
     </div>
+  );
+}
+
+/** Un tip distinto cada vez que se generan resultados (no se repite hasta ver todos; se recuerda en el teléfono). */
+const LLAVE_TIPS = 'greenpath.tips.vistos';
+function TipCO2({ cat, items }: { cat: Catalogo; items: Item[] }) {
+  const pool = tipsPara(cat, items);
+  const [tip, setTip] = useState<Tip | null>(() => {
+    if (typeof window === 'undefined') return null;
+    let vistos: string[] = [];
+    try { vistos = JSON.parse(localStorage.getItem(LLAVE_TIPS) ?? '[]'); } catch { /* sin almacenamiento */ }
+    const r = siguienteTip(pool, vistos);
+    try { localStorage.setItem(LLAVE_TIPS, JSON.stringify(r.vistos)); } catch { /* sin almacenamiento */ }
+    return r.tip;
+  });
+  const otro = () => {
+    let vistos: string[] = [];
+    try { vistos = JSON.parse(localStorage.getItem(LLAVE_TIPS) ?? '[]'); } catch { /* sin almacenamiento */ }
+    const r = siguienteTip(pool, vistos);
+    try { localStorage.setItem(LLAVE_TIPS, JSON.stringify(r.vistos)); } catch { /* sin almacenamiento */ }
+    setTip(r.tip);
+  };
+  if (!tip) return null;
+  return (
+    <section className="card border-leaf">
+      <div className="flex items-start gap-3">
+        <span className="text-2xl" aria-hidden>💡</span>
+        <div className="flex-1">
+          <p className="font-extrabold text-forest">Tip para reducir tu CO₂ en alimentos</p>
+          <p className="mt-1">{tip.texto}</p>
+          <p className="mt-1 text-xs text-muted">Fuente: {tip.fuente}</p>
+        </div>
+      </div>
+      <button onClick={otro} className="mt-2 rounded-full border border-mint bg-white px-3 py-1 text-sm font-bold text-forest">Otro tip</button>
+    </section>
   );
 }
