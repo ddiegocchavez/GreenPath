@@ -1,0 +1,161 @@
+producto	tienda	titulo	marca	cantidad	precio
+huevo	walmart	Huevo blanco San Juan 30 piezas	San Juan	30	75
+huevo	walmart	Huevo blanco San Juan 18 pzas	San Juan	18	48
+huevo	walmart	Huevo blanco San Juan 12 piezas	San Juan	12	32
+huevo	walmart	Huevo blanco Aurrera fresco 18 pzas	Aurrera	18	43
+huevo	walmart	Huevo blanco Aires de Campo orgánico 12 pzas	Aires de Campo	12	81
+huevo	walmart	Huevo blanco Nutri Campo fresco, de libre pastoreo 12 pzas	Nutri Campo	12	81
+huevo	walmart	Huevo blanco Ojai fresco 12 pzas	Ojai	12	32
+huevo	walmart	Huevo blanco Gallinita Libre 12 pzas	Gallinita Libre	12	66
+huevo	walmart	Huevo blanco Doña Pris de gallina libre pastoreo 12 pzas	Doña Pris	12	80
+huevo	heb	HCF Huevo Blanco Jumbo 18 pz	HCF	18	78.50
+huevo	heb	HCF Huevo Blanco Grande Refrigerado 12 pz	HCF	12	57
+huevo	heb	Huevo Blanco Seleccionado de Allende 12 pz	Allende	12	61
+huevo	heb	Huevo Blanco Seleccionado de Allende 30 pz	Allende	30	104
+huevo	heb	Mi Tienda Huevo Blanco Mediano 30 pz	Mi Tienda	30	64
+huevo	heb	Mi Tienda Huevo Blanco Mediano 12 pz	Mi Tienda	12	34
+huevo	heb	HEB Huevo Blanco Libre de Jaula 12 pz	HEB	12	99
+huevo	heb	Huevo Blanco Organico 12 Pz		12	84
+leche	walmart	Leche fresca Lala fresca entera 1 l	Lala	1	34
+leche	walmart	Leche Great Value entera 1 l	Great Value	1	20
+leche	walmart	Leche Alpura Selecta entera 1 l	Alpura	1	36
+leche	walmart	Leche Santa Clara entera 1 l	Santa Clara	1	37
+leche	walmart	Leche Lala UHT entera 6 pack 1 l c/u	Lala	6	160
+leche	walmart	Leche San Marcos entera ultrapasteurizada 1 l	San Marcos	1	27
+leche	heb	HCF Leche Entera 1 L	HCF	1	26
+leche	heb	HEB Sabor Tradicional Leche Entera 1.89 L	HEB	1.89	38
+leche	heb	HEB Sabor Tradicional Leche Entera 3.78 L	HEB	3.78	92.50
+leche	heb	Leche Lala Entera 1 L con 6 pz	Lala	6	181
+leche	heb	Bove Leche Entera Orgánica 1 L	Bové	1	41
+tortilla	walmart	Tortillas de maíz Exquisitas blancas 756 g	Exquisitas	0.756	34
+tortilla	walmart	Tortillas de maíz Mission blancas 750 g	Mission	0.75	36
+tortilla	walmart	Tortilla Blanca Taquera Maíz 420 g		0.42	17
+tortilla	walmart	Tortillas Susalia maíz con nopal 500 g	Susalia	0.5	44
+tortilla	heb	HEB Tortillas de Maíz de Nixtamal Blancas 1 kg	HEB	1	18.50
+tortilla	heb	La Luz Tortilla de Maíz Blanca 800 g	La Luz	0.8	34.50
+tortilla	heb	Exquisitas Tortilla de Maíz Blanca 756 g	Exquisitas	0.756	33.90
+tortilla	heb	Mission Tortilla de Maíz Blanca 750 g	Mission	0.75	35.90
+frijol	walmart	Frijol Great Value pinto 900 g	Great Value	0.9	25
+frijol	walmart	Frijol Pinto Verde Valle 900 gr	Verde Valle	0.9	35
+frijol	walmart	Frijol pinto Campo Vivo orgánico 1 kg	Campo Vivo	1	82
+frijol	walmart	Frijol Pinto Agroecológico Orgánico Huerto de Carmen 1 Kg	Huerto de Carmen	1	155
+frijol	walmart	Frijol negro Aires de Campo orgánico 1 kg	Aires de Campo	1	107
+frijol	heb	Verde Valle Frijol Pinto 900 g	Verde Valle	0.9	34.50
+frijol	heb	Mi Tienda Frijol Pinto 907 Gr	Mi Tienda	0.907	19.90
+frijol	heb	Mi Tienda Frijol Pinto 750 g	Mi Tienda	0.75	16.90
+frijol	heb	Frijol Pinto Nacional 906 g		0.906	33.90
+frijol	heb	Frijol Pinto Orgánico El Huerto de Carmen 500 g	Huerto de Carmen	0.5	58
+arroz	walmart	Arroz Verde Valle súper extra 1 kg	Verde Valle	1	39
+arroz	walmart	Arroz SOS grano largo uruguayo 1 kg	SOS	1	30
+arroz	walmart	Arroz SOS grueso súper extra 1 kg	SOS	1	36
+arroz	walmart	Arroz Diamante grano extra largo 1 kg	Diamante	1	38
+arroz	walmart	Arroz Aires de Campo orgánico super extra 1 kg	Aires de Campo	1	90
+arroz	walmart	Arroz Okko Superfoods orgánico 1 kg	Okko	1	94
+arroz	heb	Arroz Súper Extra 1 kg		1	36.90
+arroz	heb	HCF Arroz Súper Extra 1 kg	HCF	1	28.90
+arroz	heb	Arroz Organico Super Extra 1 Kg		1	91.50
+arroz	costco	Verde Valle Arroz Impegable 2.5 Kg	Verde Valle	2.5	149
+arroz	costco	Royal Arroz Basmati 4.5 kg	Royal	4.5	189
+aceite	walmart	Aceite vegetal 1-2-3 1 l	1-2-3	1	43
+aceite	walmart	Aceite vegetal Cristal 1 l	Cristal	1	40
+aceite	walmart	Aceite Great Value puro de soya 946 ml	Great Value	0.946	39
+aceite	walmart	Aceite Vegetal Aurrera Mixto 800 ml	Aurrera	0.8	30
+aceite	walmart	Aceite Nutrioli puro de soya 946 ml	Nutrioli	0.946	46
+aceite	walmart	Aceite puro de canola Capullo 750 ml	Capullo	0.75	54
+aceite	heb	Aceite 123 Aceite Vegetal Comestible 1 L	1-2-3	1	42.50
+aceite	heb	Aceite Vegetal Comestible Kartamus 900 ml	Kartamus	0.9	33.90
+aceite	heb	Canoil Aceite de Canola Puro 946 ml	Canoil	0.946	49.90
+aceite	heb	Mi Tienda Aceite Vegetal Comestible 3.5 L	Mi Tienda	3.5	143
+aceite	heb	Aceite Vegetal de Cocina Ave 850 ml	Ave	0.85	32.50
+aceite	costco	La Española Aceite de Oliva Extra Virgen 1 l	La Española	1	139
+azucar	walmart	Azúcar estándar Aurrera 900 g	Aurrera	0.9	25
+azucar	walmart	Azúcar Zulka Morena 900 gr	Zulka	0.9	28
+azucar	walmart	Azúcar morena Zulka 2 kg	Zulka	2	44
+azucar	walmart	Azúcar mascabado Great Value 1 kg	Great Value	1	47
+azucar	walmart	Azucar Organica Aires de Campo 1kg	Aires de Campo	1	109
+azucar	heb	HCF Azúcar Estándar 900 g	HCF	0.9	26
+azucar	heb	HCF Azúcar Estándar 2 kg	HCF	2	45
+azucar	heb	HCF Azúcar Blanca Refinada 1 kg	HCF	1	39
+azucar	heb	Azúcar Mascabado Sin Colorantes 1 kg		1	60
+pan	walmart	Pan Bimbo blanco 620 g	Bimbo	0.62	55
+pan	walmart	Pan blanco Bimbo Artesano original 567 g	Bimbo	0.567	62
+pan	walmart	Pan blanco Great Value 567 g	Great Value	0.567	48
+pan	walmart	Pan Butter Krust de caja blanco 567 g	Butter Krust	0.567	50
+pan	walmart	Pan blanco Wonder con ajonjolí 567 g	Wonder	0.567	57
+pan	walmart	Pan Weber's blanco 680 g	Weber's	0.68	41
+pan	heb	HEB Sabor Tradicional Pan de Barra Blanco 680 g	HEB	0.68	50
+pan	heb	HEB Pan de Barra Blanco Extradelgado 567 g	HEB	0.567	49
+pan	heb	Natures Own Pan de Barra con Mantequilla 567 g	Nature's Own	0.567	66
+pan	heb	HCF Pan de Barra Delgado 567 g	HCF	0.567	41.90
+sopa	walmart	Sopa de moño Italpasta 200 g	Italpasta	0.2	8
+sopa	walmart	Sopa de fideo Aurrera 200 g	Aurrera	0.2	5.50
+sopa	walmart	Sopa de fideo Barilla No.0 200 g	Barilla	0.2	11
+sopa	walmart	Pasta Yemina spaghetti No.7 500 g	Yemina	0.5	20
+sopa	heb	HCF Pasta para Sopa Munición 200 g	HCF	0.2	7
+sopa	heb	Pasta para Sopa Moñito 200 g		0.2	7
+atun	walmart	Atún Herdez en agua 130 g	Herdez	0.13	19
+atun	walmart	Atún Herdez en agua 280 g	Herdez	0.28	45
+atun	walmart	Atún Mazatún en hojuelas en agua 130 g	Mazatún	0.13	19
+atun	walmart	Atún Great Value en agua 140 g	Great Value	0.14	17
+atun	walmart	Atún Tuny clásico en agua 140 g	Tuny	0.14	21
+atun	walmart	Atún El Dorado Forte en agua con aceite 130 g	El Dorado	0.13	13
+atun	heb	HCF Atun en Agua Lata 140 g	HCF	0.14	20.50
+atun	heb	Atún Mazatún en Agua Lata 130 g	Mazatún	0.13	19
+atun	heb	Dolores Premium Lomo de Atún en Agua Lata 140 g	Dolores	0.14	39
+atun	costco	Dolores Atún en Agua 10 pzas de 140 g	Dolores	1.4	239
+atun	costco	Mazatún Atún en Agua sin soya 10 pzas de 130 g	Mazatún	1.3	209
+atun	costco	Kirkland Signature Atún Albacora 8 pzas de 198 g	Kirkland Signature	1.584	389
+pollo	walmart	Pechuga de Pollo Just Bare Cruda Deshuesada y Sin Piel 540 g	Just Bare	0.54	97
+pollo	heb	HEB Medias Pechuga de Pollo Sin Hueso en Bolsa 1 kg	HEB	1	156
+pollo	heb	Pechuga Sin Hueso Iqf 1 Kg		1	94
+res	heb	HEB Molida 80/20 500 g	HEB	0.5	112
+res	heb	HEB Molida Sirloin de Res 90/10 500 g	HEB	0.5	164
+res	heb	HEB Supreme Molida Pulpa de Res 1 kg	HEB	1	249
+cebolla	walmart	Cebolla Blanca en Malla 1 kg		1	45
+papa	heb	HEB Papa Russet 1 kg	HEB	1	35
+aguacate	walmart	Aguacate Hass En Malla 750 G		0.75	30
+aguacate	walmart	Aguacate Hass Orgánico Marketside En Malla 800 G	Marketside	0.8	119
+queso	walmart	Queso panela Bové orgánico 400 g	Bové	0.4	133
+queso	walmart	Queso Panela Carranco 400 g	Carranco	0.4	90
+queso	walmart	Queso panela Esmeralda 400 g	Esmeralda	0.4	94
+queso	walmart	Queso panela Caperucita 400 g	Caperucita	0.4	100
+queso	heb	Carranco Queso Panela 400 g	Carranco	0.4	94.50
+queso	heb	HEB Sabor Tradicional Queso Panela 400 g	HEB	0.4	102
+queso	heb	HEB Sabor Tradicional Queso Panela 1 kg	HEB	1	255
+yogurt	walmart	Yoghurt Yoplait natural con probióticos 1 kg	Yoplait	1	50
+yogurt	walmart	Yoghurt Yoplait griego natural sin azúcar 1 kg	Yoplait	1	100
+cafe	walmart	Café Soluble Nescafé Clásico 60 g	Nescafé	0.06	75
+cafe	walmart	Café soluble Nescafé Clásico 400 g	Nescafé	0.4	225
+cafe	walmart	Café soluble Great Value colombiano gourmet 200 g	Great Value	0.2	161
+cafe	walmart	Café soluble Garat gourmet 125 g	Garat	0.125	129
+cafe	heb	Café Soluble Nescafé Clásico 60 g	Nescafé	0.06	71.90
+cafe	heb	Oro Café Soluble 24 Kilates 160 g	Oro	0.16	141
+avena	walmart	Hojuelas de avena integral Quaker Oats 800 g	Quaker	0.8	81
+avena	walmart	Hojuela de Avena Granvita de grano entero 425 g	Granvita	0.425	53
+avena	heb	HCF Avena en Hojuelas 1 kg	HCF	1	31
+avena	heb	Avena Integral Hojuelas 1 Kg		1	37
+avena	heb	Hojuela de Avena Organico 400 g		0.4	69
+avena	heb	Bobs Red Mill Hojuelas de Avena Orgánica Tradicional 453 g	Bob's Red Mill	0.453	115
+lentejas	walmart	Lentejas Verde Valle 500 g	Verde Valle	0.5	25
+lentejas	walmart	Lentejas Great Value 500 g	Great Value	0.5	16
+lentejas	walmart	Lentejas Schettino 500 g	Schettino	0.5	16
+lentejas	walmart	Lenteja Aires de Campo criolla orgánica 500 g	Aires de Campo	0.5	55
+lentejas	heb	Verde Valle Lenteja en Bolsa 500 g	Verde Valle	0.5	25.50
+lentejas	heb	HEB Lenteja en Bolsa 500 g	HEB	0.5	32.90
+lentejas	heb	Aires de Campo Lenteja Orgánica 500 g	Aires de Campo	0.5	54.90
+papel	walmart	Papel higiénico Pétalo Rendimax 32 rollos de 220 hojas dobles	Pétalo	32	169
+papel	walmart	Papel higiénico Elite Ultra suave 40 rollos con 220 hojas dobles c/u	Elite	40	170
+papel	walmart	Papel higiénico Kleenex Cottonelle Elegance 16 rollos con 228 hojas dobles c/u	Kleenex	16	135
+papel	walmart	Papel higiénico Kleenex Elegance Cottonelle 30 rollos con 215 hojas dobles c/u	Kleenex	30	199
+papel	heb	Mi Tienda Papel Higiénico con 12 Rollos	Mi Tienda	12	52
+papel	heb	Papel Higiénico Petalo Ultra Jumbo con 16 Rollos	Pétalo	16	89
+papel	heb	Papel Higiénico Elite Ultra Suave con 32 Rollos	Elite	32	209
+papel	costco	Kirkland Signature Papel Higiénico 30 pzas	Kirkland Signature	30	439
+papel	costco	Charmin Papel Higiénico Ultra Soft 30 Mega Rollos	Charmin	30	749
+detergente	walmart	Detergente multiusos Great Value en polvo cítrico floral 1 Kg	Great Value	1	32
+detergente	walmart	Detergente en polvo Persil Universal 4.5Kg	Persil	4.5	151
+detergente	walmart	Detergente en polvo Bold 3 cariñitos de mamá 850 g	Bold	0.85	28
+detergente	walmart	Detergente en polvo Blanca Nieves multiusos 1 kg	Blanca Nieves	1	48
+detergente	heb	Mi Tienda Detergente en Polvo Multiusos Aroma Floral 1.8 kg	Mi Tienda	1.8	55.50
+detergente	heb	Mi Tienda Detergente en Polvo Multiusos Aroma Lavanda 800 g	Mi Tienda	0.8	25
+detergente	heb	Detergente en Polvo Biológico Y Biodegradable 1 Kg		1	49

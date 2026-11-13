@@ -1,0 +1,1 @@
+﻿-- Vacía a propósito: se aplicó vacía por error; el contenido está en *_catalogo_tablas.sql

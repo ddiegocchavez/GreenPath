@@ -1,0 +1,31 @@
+@import "tailwindcss";
+
+@theme inline {
+  --color-forest: #0f3d2e;
+  --color-pine: #1b5e3f;
+  --color-leaf: #2e9e5b;
+  --color-sprout: #a8e6b8;
+  --color-mint: #ddf3e4;
+  --color-mist: #f1faf3;
+  --color-ink: #0f2a1e;
+  --color-muted: #4f6b5a;
+  --color-sun: #f2c94c;
+  --color-alert: #c2513f;
+  --font-sans: var(--font-nunito);
+}
+
+html, body {
+  background: var(--color-mist);
+  color: var(--color-ink);
+}
+
+/* Botón con "hundimiento" al presionar, estilo lúdico */
+.btn {
+  @apply w-full rounded-2xl px-5 py-4 text-lg font-extrabold transition active:translate-y-1 disabled:opacity-50;
+  box-shadow: 0 4px 0 var(--shadow, #1b5e3f);
+}
+.btn:active { box-shadow: 0 0 0 var(--shadow, #1b5e3f); }
+.btn-primary { @apply bg-leaf text-white; --shadow: #1b5e3f; }
+.btn-light { @apply bg-white text-forest border-2 border-mint; --shadow: #a8e6b8; }
+.card { @apply rounded-3xl bg-white p-5 border border-mint; }
+.field { @apply w-full rounded-2xl border-2 border-mint bg-white px-4 py-3 text-lg outline-none focus:border-leaf; }

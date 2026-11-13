@@ -1,3 +1,0 @@
--- Migración vacía: se aplicó sin contenido por error el 2026-11-12.
--- No cambia nada. El contenido real está en 20261112221531_rewards_points_v1.sql.
--- No borrar: ya está registrada en el historial remoto.
