@@ -1,7 +1,12 @@
 // Prueba E2E contra Supabase: cuentas anónimas, perfil, Plus demo, créditos sin doble cobro, compensación y RLS.
 // Uso (desde app/): node ../supabase/tests/planes_e2e.mjs   (lee NEXT_PUBLIC_SUPABASE_URL/KEY de app/.env.local)
 import { readFileSync } from 'node:fs';
-import { createClient } from '@supabase/supabase-js';
+import { createRequire } from 'node:module';
+import { pathToFileURL } from 'node:url';
+
+// supabase-js vive en app/node_modules: se resuelve desde ahí.
+const ruta = createRequire(new URL('../../app/package.json', import.meta.url)).resolve('@supabase/supabase-js');
+const { createClient } = await import(pathToFileURL(ruta).href);
 
 const env = Object.fromEntries(readFileSync(new URL('../../app/.env.local', import.meta.url), 'utf8').trim().split(/\r?\n/).map((l) => l.split(/=(.*)/s).slice(0, 2)));
 const nuevo = () => createClient(env.NEXT_PUBLIC_SUPABASE_URL, env.NEXT_PUBLIC_SUPABASE_KEY, { auth: { persistSession: false } });
@@ -23,8 +28,10 @@ let { data: est } = await a.rpc('mi_estado');
 check(est.plan === 'gratis' && est.saldo === 0, 'empieza en Gratis con 0 créditos');
 
 const opt = { origen: 'lista', items: [{ productoId: 'huevo', cantidad: 12 }], presupuesto: 500, prioridad: 'precio', referencia_tipo: 'super_habitual', referencia_detalle: 'H-E-B', total_referencia: 120, total_optimizado: 110, co2e_referencia: 1, co2e_optimizado: 1, tiendas: ['walmart'] };
-let { data: g0 } = await a.rpc('guardar_optimizacion', { p: opt, p_idem: 'prueba-gratis-1' });
-check(g0.modo === 'gratis' && g0.saldo === 0, 'en Gratis se guarda sin consumir créditos');
+const { error: sinPago } = await a.rpc('guardar_optimizacion', { p: opt, p_idem: 'prueba-gratis-0' });
+check(!!sinPago, 'en Gratis no se guarda sin pagar el análisis');
+let { data: g0 } = await a.rpc('guardar_optimizacion', { p: opt, p_idem: 'prueba-gratis-1', p_pago_demo: true });
+check(g0.modo === 'gratis' && g0.saldo === 0 && Number(g0.pagado_demo_mxn) === 5, 'en Gratis, pagando $5 (demo) se guarda sin consumir créditos');
 
 ({ data: est } = await a.rpc('cambiar_plan_demo', { p_plan: 'plus' }));
 check(est.plan === 'plus' && est.saldo === 4, 'Plus demo asigna 4 optimizaciones');

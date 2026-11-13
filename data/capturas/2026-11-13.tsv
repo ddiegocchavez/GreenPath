@@ -92,3 +92,33 @@ leche	heb	HEB Sabor Tradicional Leche Deslactosada 1.89 L	HEB	1.89	47
 papel	heb	Papel Higiénico Cottonelle Comfort con 6 Rollos	Cottonelle	6	105
 papel	heb	Papel Higiénico Cottonelle Soft Care con 8 Rollos	Cottonelle	8	108
 papel	heb	Papel Higiénico Regio Ecomax con 12 Rollos	Regio	12	80
+miel	walmart	Miel de abeja Carlota 300 g	Carlota	0.3	63
+miel	walmart	Miel de abeja Carlota 500 g	Carlota	0.5	95
+miel	walmart	Miel de abeja Great Value 300 g	Great Value	0.3	59
+miel	walmart	Miel de abeja Tía Ofilia extra virgen 630 g	Tía Ofilia	0.63	149
+miel	heb	Tía Ofilia Miel De Abeja Extra Virgen 330 g	Tía Ofilia	0.33	87.50
+miel	heb	Miel de Abeja Orgánica Extra Virgen Tía Ofilia 330 g	Tía Ofilia	0.33	88.90
+miel	heb	Apiario Reyna Miel de Abeja 365 g	Apiario Reyna	0.365	55.50
+miel	heb	Miel de Abeja 1 Kg		1	113
+salmas	walmart	Tostadas de maíz Sanissimo horneadas 240 g	Sanissimo	0.24	45
+salmas	heb	Sanissimo Salmas Naturales 360 g	Sanissimo	0.36	68
+salmas	heb	Sanissimo Salmas de Maíz Blanco Horneadas 144 g	Sanissimo	0.144	38
+queso_manchego	walmart	Queso manchego FUD 33 rallado 200 g	FUD	0.2	54
+queso_manchego	heb	HEB Sabor Tradicional Queso Manchego Rallado 250 g	HEB	0.25	73
+queso_manchego	heb	HEB Sabor Tradicional Queso Manchego Rallado 500 g	HEB	0.5	134
+queso_manchego	heb	HEB Sabor Tradicional Queso Manchego Rallado 1 kg	HEB	1	262
+queso_cottage	walmart	Queso cottage Lyncott 1% grasa 380 g	Lyncott	0.38	59
+queso_cottage	walmart	Queso Cottage Lala Light Natural 350 g	Lala	0.35	75
+queso_cottage	heb	Carranco Queso Cottage Regular 350 g	Carranco	0.35	70.90
+queso_cottage	heb	Lyncott Queso Cottage Regular 380 g	Lyncott	0.38	58
+queso_cottage	heb	HEB Queso Cottage Proteina 454 g	HEB	0.454	61
+yogurt	walmart	Yogurt griego Chobani Natural 20 g proteína 907 g	Chobani	0.907	159
+yogurt	walmart	Yogurt Griego Chobani Natural Sin Grasa 907 g	Chobani	0.907	155
+yogurt	heb	Yogurt Griego Oikos Selecto Natural sin Azúcar Añadida 900 g	Oikos	0.9	109
+bolsa_basura	walmart	Bolsas para basura Costalitos opacidad total mediano 22 pzas	Costalitos	22	39
+bolsa_basura	heb	HEB Bolsas de Basura Tamaño Grande con 25 pz	HEB	25	72
+bolsa_basura	heb	HEB Bolsas de Basura Tamaño Grande con 100 pz	HEB	100	247
+bolsa_basura	heb	HEB Bolsas de Basura Tamaño Jumbo con 15 pz	HEB	15	72
+jamon	heb	San Rafael Balance Pechuga de Pavo 250 g	San Rafael	0.25	87.90
+consome	heb	Caldo Tomatisimo 18 Cubos 189 g		0.189	27
+consome	heb	Knorr Sazonador de Tomate Tomatisimo 10 Cubos 105 g	Knorr	0.105	17

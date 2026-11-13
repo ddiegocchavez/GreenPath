@@ -62,6 +62,8 @@ export function MiValor({ uid, cat, planes, estado, setEstado, onEditarPerfil, o
   const desperdicio = revs.reduce((a, r) => a + (r.costo_desperdicio ?? 0), 0);
   const meses = estado?.plan === 'plus' ? MESES_DEMO(estado.plan_desde) : 0;
   const costoPlus = meses * (plus?.precio_mxn ?? 99);
+  const pagosAnalisis = opts.reduce((a, o) => a + (o.pagado_demo_mxn ?? 0), 0);
+  const costo = costoPlus + pagosAnalisis;
   const co2Ref = opts.reduce((a, o) => a + (o.co2e_referencia ?? 0), 0);
   const co2Opt = opts.reduce((a, o) => a + (o.co2e_optimizado ?? 0), 0);
 
@@ -107,8 +109,9 @@ export function MiValor({ uid, cat, planes, estado, setEstado, onEditarPerfil, o
               nota={comprobadas.length ? `Pagaste ${pesos(gastoReal)} en ${comprobadas.length} compra(s) registradas.` : 'Registra lo que pagaste en una optimización.'} />
             <Dato titulo="Dinero perdido por desperdicio" valor={revs.length ? pesos(desperdicio) : 'Sin datos'} t="tuyo" />
             {estado?.plan === 'plus' && <Dato titulo="Costo de suscripción" valor={pesos(costoPlus)} t="demo" nota={`${meses} mes(es) de Plus en modo demostración.`} />}
-            {estado?.plan === 'plus' && <Dato titulo="Beneficio neto estimado" valor={pesos(potencial - costoPlus)} t="estimado" nota="Ahorro potencial menos costo de Plus." />}
-            {estado?.plan === 'plus' && comprobadas.length > 0 && <Dato titulo="Beneficio neto comprobado" valor={pesos(comprobado - costoPlus)} t="comprobado" />}
+            {pagosAnalisis > 0 && <Dato titulo="Análisis pagados" valor={pesos(pagosAnalisis)} t="demo" nota="Pago por análisis en modo demostración (no se cobró)." />}
+            {costo > 0 && <Dato titulo="Beneficio neto estimado" valor={pesos(potencial - costo)} t="estimado" nota="Ahorro potencial menos lo pagado (Plus y análisis)." />}
+            {costo > 0 && comprobadas.length > 0 && <Dato titulo="Beneficio neto comprobado" valor={pesos(comprobado - costo)} t="comprobado" />}
           </div>
         )}
       </section>

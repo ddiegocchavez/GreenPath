@@ -8,7 +8,8 @@ const GRATIS = [
   'Tu perfil de consumo y diagnóstico',
   'Comparar tu lista por tienda (Walmart, H-E-B, Costco) con precios reales',
   'Huella de CO₂e estimada con fuente científica',
-  'Leer tickets y guardar tu historial básico',
+  'Leer tickets y comparar los totales',
+  'Detalle por producto y guardar en tu historial: $5 por análisis (demo)',
 ];
 const PLUS = [
   'Optimización completa: combina tiendas y respeta tu presupuesto',

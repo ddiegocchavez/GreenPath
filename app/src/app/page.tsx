@@ -162,7 +162,7 @@ export default function Home() {
         <Resultados cat={cat} nombre={nombre} items={final.items} presupuesto={presupuesto} prioridad={prioridad} punto={punto}
           totalTicket={objetivo ? totalDelTicket() : null} recortes={final.recortes}
           origen={objetivo ? 'ticket' : 'lista'} uid={uid} perfil={perfil} setPerfil={setPerfil} estado={estado} setEstado={setEstado}
-          onVerValor={() => ir('mivalor')}
+          onVerValor={() => ir('mivalor')} precioAnalisis={planes.find((p) => p.id === 'gratis')?.precio_analisis_mxn}
           onReiniciar={reiniciar} onEditar={() => setHistorial((h) => h.slice(0, h.lastIndexOf(objetivo ? 'revisar' : 'lista') + 1))} />
       )}
 

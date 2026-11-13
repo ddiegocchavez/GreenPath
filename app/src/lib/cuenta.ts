@@ -4,12 +4,12 @@ import type { Perfil, Revision } from './perfil';
 import type { Item } from './tipos';
 
 export type Estado = { plan: 'gratis' | 'plus'; saldo: number; usadas_ciclo: number; ciclo: string; plan_desde?: string | null };
-export type Plan = { id: 'gratis' | 'plus'; nombre: string; precio_mxn: number; optimizaciones_incluidas: number; umbral_compensacion_mxn: number | null };
+export type Plan = { id: 'gratis' | 'plus'; nombre: string; precio_mxn: number; optimizaciones_incluidas: number; umbral_compensacion_mxn: number | null; precio_analisis_mxn: number | null };
 export type Optimizacion = {
   id: string; creada_en: string; modo: 'gratis' | 'plus'; origen: 'lista' | 'ticket'; items: Item[];
   presupuesto: number | null; prioridad: string | null; referencia_tipo: string; referencia_detalle: string | null;
   total_referencia: number | null; total_optimizado: number; co2e_referencia: number | null; co2e_optimizado: number | null;
-  tiendas: string[]; gasto_real: number | null;
+  tiendas: string[]; gasto_real: number | null; pagado_demo_mxn: number | null;
 };
 export type Movimiento = { id: number; creado_en: string; tipo: string; cantidad: number; detalle: string | null };
 export type RevisionGuardada = Revision & { id: string; optimizacion_id: string | null; creada_en: string; costo_desperdicio: number | null };
@@ -54,7 +54,7 @@ export async function actualizarAlternativas(uid: string, aceptadas: string[], r
 export async function leerPlanes(): Promise<Plan[]> {
   const { data, error } = await sb().from('planes').select('*');
   if (error) throw new Error(error.message);
-  return data.map((x) => ({ ...x, precio_mxn: Number(x.precio_mxn), umbral_compensacion_mxn: num(x.umbral_compensacion_mxn) }));
+  return data.map((x) => ({ ...x, precio_mxn: Number(x.precio_mxn), umbral_compensacion_mxn: num(x.umbral_compensacion_mxn), precio_analisis_mxn: num(x.precio_analisis_mxn) }));
 }
 
 export async function miEstado(): Promise<Estado> {
@@ -69,9 +69,10 @@ export async function cambiarPlanDemo(plan: 'gratis' | 'plus'): Promise<Estado> 
   return data as Estado;
 }
 
-export type NuevaOptimizacion = Omit<Optimizacion, 'id' | 'creada_en' | 'modo' | 'gasto_real'> & { modo?: 'plus' };
-export async function guardarOptimizacion(o: NuevaOptimizacion, idem: string): Promise<{ id: string; repetida: boolean; modo: 'gratis' | 'plus' } & Estado> {
-  const { data, error } = await sb().rpc('guardar_optimizacion', { p: o, p_idem: idem });
+export type NuevaOptimizacion = Omit<Optimizacion, 'id' | 'creada_en' | 'modo' | 'gasto_real' | 'pagado_demo_mxn'> & { modo?: 'plus' };
+/** En Gratis requiere pagoDemo = true (pago por análisis en modo demostración, sin cobro real). */
+export async function guardarOptimizacion(o: NuevaOptimizacion, idem: string, pagoDemo = false): Promise<{ id: string; repetida: boolean; modo: 'gratis' | 'plus' } & Estado> {
+  const { data, error } = await sb().rpc('guardar_optimizacion', { p: o, p_idem: idem, p_pago_demo: pagoDemo });
   if (error) throw new Error(error.message);
   return data;
 }
@@ -87,7 +88,7 @@ export async function historial(): Promise<{ optimizaciones: Optimizacion[]; mov
   return {
     optimizaciones: (o.data ?? []).map((x) => ({
       ...x, presupuesto: num(x.presupuesto), total_referencia: num(x.total_referencia), total_optimizado: Number(x.total_optimizado),
-      co2e_referencia: num(x.co2e_referencia), co2e_optimizado: num(x.co2e_optimizado), gasto_real: num(x.gasto_real),
+      co2e_referencia: num(x.co2e_referencia), co2e_optimizado: num(x.co2e_optimizado), gasto_real: num(x.gasto_real), pagado_demo_mxn: num(x.pagado_demo_mxn),
     })),
     movimientos: m.data ?? [],
     revisiones: (r.data ?? []).map((x) => ({ ...x, costo_desperdicio: num(x.costo_desperdicio) })),

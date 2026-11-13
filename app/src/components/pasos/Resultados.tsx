@@ -14,7 +14,7 @@ export function Resultados(props: {
   cat: Catalogo; nombre: string; items: Item[]; presupuesto: number | null; prioridad: Prioridad; punto: Punto;
   totalTicket: number | null; recortes: Recorte[]; onReiniciar: () => void; onEditar: () => void;
   origen: 'lista' | 'ticket'; uid: string | null; perfil: Perfil | null; setPerfil: (p: Perfil) => void;
-  estado: Estado | null; setEstado: (e: Estado) => void; onVerValor: () => void;
+  estado: Estado | null; setEstado: (e: Estado) => void; onVerValor: () => void; precioAnalisis?: number | null;
 }) {
   const { nombre, presupuesto, prioridad, punto, totalTicket, recortes, perfil, estado } = props;
   const [orden, setOrden] = useState<'asc' | 'desc'>('asc');
@@ -22,6 +22,7 @@ export function Resultados(props: {
   const [habitualLocal, setHabitualLocal] = useState<TiendaId | null>(null);
   const [guardado, setGuardado] = useState<string | null>(null);
   const [guardando, setGuardando] = useState(false);
+  const [pagado, setPagado] = useState(false);
   const [idem] = useState(() => crypto.randomUUID());
 
   // Preferencias del perfil (súper, calidad, restricciones, marcas) y alternativas aceptadas.
@@ -66,6 +67,10 @@ export function Resultados(props: {
     await actualizarAlternativas(props.uid, ac, re).catch(() => undefined);
   };
 
+  // En Gratis el detalle por producto (qué comprar y dónde) y guardar el historial se desbloquean pagando el análisis.
+  const desbloqueado = completo || pagado;
+  const precioAnalisis = props.precioAnalisis ?? 5;
+
   const guardar = async () => {
     setGuardando(true);
     try {
@@ -75,9 +80,12 @@ export function Resultados(props: {
         total_referencia: ref?.total ?? null, total_optimizado: mejor.total,
         co2e_referencia: ref?.plan.huellaKg ?? null, co2e_optimizado: mejor.huellaKg ?? null, tiendas: mejor.tiendas,
         ...(completo ? { modo: 'plus' as const } : {}),
-      }, idem);
+      }, idem, !completo);
       props.setEstado({ plan: r.plan, saldo: r.saldo, usadas_ciclo: r.usadas_ciclo, ciclo: r.ciclo, plan_desde: r.plan_desde });
-      setGuardado(r.repetida ? 'Ya estaba guardada (no se cobró de nuevo).' : r.modo === 'plus' ? `Guardada. Te quedan ${r.saldo} optimizaciones este mes.` : 'Guardada en tu historial.');
+      if (!completo) setPagado(true);
+      setGuardado(r.repetida ? 'Ya estaba guardada (no se cobró de nuevo).'
+        : r.modo === 'plus' ? `Guardada. Te quedan ${r.saldo} optimizaciones este mes.`
+        : `Análisis desbloqueado y guardado. Pago de ${pesos(precioAnalisis)} en modo demostración: no se cobró nada.`);
     } catch (e) { setGuardado(e instanceof Error ? e.message : String(e)); }
     setGuardando(false);
   };
@@ -109,14 +117,14 @@ export function Resultados(props: {
           {mejor.sustProm != null && <span className="rounded-full bg-white/15 px-3 py-1">Sustentabilidad S{mejor.sustProm.toFixed(1)}</span>}
           {mejor.huellaKg != null && <span className="rounded-full bg-white/15 px-3 py-1">≈ {mejor.huellaKg} kg CO₂e</span>}
         </div>
-        {mejor.faltantes.length > 0 && <p className="mt-2 text-sun">No encontramos: {mejor.faltantes.map((f) => f.nombre).join(', ')}</p>}
+        {mejor.faltantes.length > 0 && <p className="mt-2 text-sun">Precio no disponible en línea: {mejor.faltantes.map((f) => f.nombre).join(', ')} (no se incluye en el total)</p>}
         <ul className="mt-3 space-y-1">
           {mejor.tiendas.map((t) => <Sucursal key={t} cat={cat} t={t} c={cercanas[t]} claro />)}
         </ul>
         <button className="mt-4 w-full rounded-2xl bg-white/15 py-3 font-extrabold" onClick={() => setAbierto(abierto === clave(mejor) ? null : clave(mejor))}>
           {abierto === clave(mejor) ? 'Ocultar productos' : 'Ver productos'}
         </button>
-        {abierto === clave(mejor) && <Detalle cat={cat} plan={mejor} oscuro />}
+        {abierto === clave(mejor) && (desbloqueado ? <Detalle cat={cat} plan={mejor} oscuro /> : <Bloqueado precio={precioAnalisis} oscuro />)}
       </section>
 
       {recortes.length > 0 && (
@@ -217,9 +225,17 @@ export function Resultados(props: {
 
       {props.uid && (
         <section className="card">
+          {!completo && !guardado && (
+            <p className="mb-3 text-sm text-muted">
+              En Gratis ves los totales por tienda. Para ver <b>qué producto comprar en cada tienda</b> y guardar este análisis en tu historial,
+              desbloquéalo por {pesos(precioAnalisis)} o usa Plus.
+            </p>
+          )}
           <button className="btn btn-primary" onClick={guardar} disabled={guardando || !!guardado}>
-            {guardando ? 'Guardando…' : guardado ? 'Guardada ✓' : completo ? `Guardar optimización (usa 1 de ${estado?.saldo})` : 'Guardar en mi historial (gratis)'}
+            {guardando ? 'Procesando…' : guardado ? (completo ? 'Guardada ✓' : 'Desbloqueado ✓')
+              : completo ? `Guardar optimización (usa 1 de ${estado?.saldo})` : `Desbloquear y guardar · ${pesos(precioAnalisis)} (demo, sin cobro)`}
           </button>
+          {!completo && !guardado && <button className="btn btn-light mt-3" onClick={props.onVerValor}>Conocer Plus</button>}
           {guardado && <p className="mt-2 text-sm font-bold text-pine">{guardado} <button className="underline" onClick={props.onVerValor}>Ver Mi valor</button></p>}
         </section>
       )}
@@ -233,7 +249,7 @@ export function Resultados(props: {
           </button>
         </div>
         <ul className="space-y-2">
-          {solas.map((p) => <FilaPlan key={clave(p)} cat={cat} plan={p} presupuesto={presupuesto} abierto={abierto === clave(p)} onToggle={() => setAbierto(abierto === clave(p) ? null : clave(p))} cerca={cercanas[p.tiendas[0]]} />)}
+          {solas.map((p) => <FilaPlan key={clave(p)} cat={cat} plan={p} presupuesto={presupuesto} desbloqueado={desbloqueado} precio={precioAnalisis} abierto={abierto === clave(p)} onToggle={() => setAbierto(abierto === clave(p) ? null : clave(p))} cerca={cercanas[p.tiendas[0]]} />)}
         </ul>
       </section>
 
@@ -241,7 +257,7 @@ export function Resultados(props: {
         <section>
           <h2 className="mb-2 text-xl font-black text-forest">Combinando 2 tiendas</h2>
           <ul className="space-y-2">
-            {combos.map((p) => <FilaPlan key={clave(p)} cat={cat} plan={p} presupuesto={presupuesto} abierto={abierto === clave(p)} onToggle={() => setAbierto(abierto === clave(p) ? null : clave(p))} />)}
+            {combos.map((p) => <FilaPlan key={clave(p)} cat={cat} plan={p} presupuesto={presupuesto} desbloqueado={desbloqueado} precio={precioAnalisis} abierto={abierto === clave(p)} onToggle={() => setAbierto(abierto === clave(p) ? null : clave(p))} />)}
           </ul>
         </section>
       )}
@@ -271,8 +287,9 @@ function Sucursal({ cat, t, c, claro }: { cat: Catalogo; t: TiendaId; c: ReturnT
   );
 }
 
-function FilaPlan({ cat, plan, presupuesto, abierto, onToggle, cerca }: {
+function FilaPlan({ cat, plan, presupuesto, abierto, onToggle, cerca, desbloqueado, precio }: {
   cat: Catalogo; plan: Plan; presupuesto: number | null; abierto: boolean; onToggle: () => void; cerca?: ReturnType<typeof masCercana>;
+  desbloqueado: boolean; precio: number;
 }) {
   return (
     <li className="card !p-4">
@@ -292,8 +309,8 @@ function FilaPlan({ cat, plan, presupuesto, abierto, onToggle, cerca }: {
       {abierto && (
         <>
           {cerca && <ul className="mt-2"><Sucursal cat={cat} t={plan.tiendas[0]} c={cerca} /></ul>}
-          {plan.faltantes.length > 0 && <p className="mt-2 text-sm text-alert">No hay en línea: {plan.faltantes.map((f) => f.nombre).join(', ')}</p>}
-          <Detalle cat={cat} plan={plan} />
+          {plan.faltantes.length > 0 && <p className="mt-2 text-sm text-alert">Precio no disponible en línea: {plan.faltantes.map((f) => f.nombre).join(', ')}</p>}
+          {desbloqueado ? <Detalle cat={cat} plan={plan} /> : <Bloqueado precio={precio} />}
         </>
       )}
     </li>
@@ -329,3 +346,14 @@ function Detalle({ cat, plan, oscuro }: { cat: Catalogo; plan: Plan; oscuro?: bo
   );
 }
 
+
+/** Candado del detalle por producto (Gratis sin pagar el análisis). */
+function Bloqueado({ precio, oscuro }: { precio: number; oscuro?: boolean }) {
+  return (
+    <div className={`mt-3 rounded-2xl p-4 text-center ${oscuro ? 'bg-white text-ink' : 'bg-mist'}`}>
+      <p className="text-2xl" aria-hidden>🔒</p>
+      <p className="font-extrabold text-forest">Detalle por producto bloqueado</p>
+      <p className="text-sm text-muted">Qué marca y presentación comprar en cada tienda. Desbloquéalo por {pesos(precio)} (demo) o con Plus.</p>
+    </div>
+  );
+}

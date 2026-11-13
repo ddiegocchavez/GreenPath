@@ -75,6 +75,7 @@ export function emparejar(texto: string, ix: Indice): { id: string | null; confi
       if (k === w) f = 1;
       else if (k.startsWith(w) && w.length >= 3) f = 0.75;                 // "cla" → "clara", "veg" → "vegetal"
       else if (w.startsWith(k) && k.length >= 5) f = 0.75;                  // "deslactosada" ↔ "deslactosad"
+      else if (w.length >= 6 && k.length >= 6 && casiIgual(w, k)) f = 0.6;  // OCR: "consone" ≈ "consome", "natual" ≈ "natural"
       if (!f) continue;
       const v = f * peso(e.productos.size) * (e.marca ? 1.5 : 1);
       for (const id of e.productos) mejorPorProducto.set(id, Math.max(mejorPorProducto.get(id) ?? 0, v));
@@ -104,13 +105,44 @@ export function extraerPrecio(texto: string): number | null {
   return Number(`${m[1]}.${m[2]}`);
 }
 
-/** Columnas CANT · PRE.UNIT · TOTAL al final del renglón ("3 59.90 179.70"). */
+/**
+ * Columnas CANT · PRE.UNIT · TOTAL ("3 59.90 179.70"). Tolera lo que hace el OCR:
+ * basura después del total, un decimal perdido ("69.9", "33.9)") y la cantidad pegada al precio
+ * ("815,50 124.00" = 8 × 15.50; "199.90 99.90" = 1 × 99.90). Solo acepta si cantidad × unitario ≈ total.
+ */
 export function extraerColumnas(texto: string): { unidades: number; unitario: number; total: number } | null {
-  const m = texto.match(/(?:^|\s)(\d{1,2})\s+\$?(\d{1,4}[.,]\d{2})\s+\$?(\d{1,5}[.,]\d{2})\s*$/);
-  if (!m) return null;
-  const [unidades, unitario, total] = [Number(m[1]), Number(m[2].replace(',', '.')), Number(m[3].replace(',', '.'))];
-  // Solo si cuadra (tolerancia por errores de OCR en un dígito).
-  return Math.abs(unidades * unitario - total) <= Math.max(1, total * 0.05) ? { unidades, unitario, total } : null;
+  const nums = [...texto.matchAll(/(\d{1,6})[.,](\d{1,2})(?!\d)/g)].map((m) => ({
+    txt: m[1], valor: Number(`${m[1]}.${m[2].padEnd(2, '0')}`), i: m.index!,
+  }));
+  if (nums.length < 2) return null;
+  const [a, b] = nums.slice(-2);
+  const total = b.valor;
+  const cuadra = (q: number, u: number) => q >= 1 && q <= 50 && Math.abs(q * u - total) <= Math.max(1, total * 0.05);
+  const r2 = (n: number) => Math.round(n * 100) / 100;
+
+  const antes = texto.slice(0, a.i).match(/(?:^|\s)(\d{1,2})\s+$/);
+  if (antes && cuadra(Number(antes[1]), a.valor)) return { unidades: Number(antes[1]), unitario: a.valor, total };
+  // Cantidad pegada al unitario: separar 1 o 2 dígitos del inicio.
+  for (const k of [1, 2]) {
+    if (a.txt.length <= k) continue;
+    const q = Number(a.txt.slice(0, k));
+    const u = r2(a.valor - q * 10 ** (a.txt.length - k));
+    if (u > 0 && cuadra(q, u)) return { unidades: q, unitario: u, total };
+  }
+  if (cuadra(1, a.valor)) return { unidades: 1, unitario: a.valor, total };
+  return null;
+}
+
+/** Distancia de edición ≤ 1 (una letra cambiada, de más o de menos). */
+function casiIgual(a: string, b: string) {
+  if (Math.abs(a.length - b.length) > 1) return false;
+  let i = 0, j = 0, dif = 0;
+  while (i < a.length && j < b.length) {
+    if (a[i] === b[j]) { i++; j++; continue; }
+    if (++dif > 1) return false;
+    if (a.length > b.length) i++; else if (b.length > a.length) j++; else { i++; j++; }
+  }
+  return dif + (a.length - i) + (b.length - j) <= 1;
 }
 
 /** Presentación escrita en el renglón ("18PZ", "900G", "750GR", "946ML", "6s"), en la unidad del producto. */
@@ -128,7 +160,11 @@ export function extraerCantidad(texto: string, unidad: Producto['unidad']): numb
 }
 
 // Renglones que no son artículos (encabezados, impuestos, pago). Incluye lecturas típicas del OCR ("TUA16%" = "IVA16%").
-const RUIDO = /total|subtotal|iva|tua\d|venta|cambio|efectivo|tarjeta|pago|articulo|gracias|rfc|ticket|folio|caja|fecha|cuenta|autoriza|comentar|precios|prosa|visa|master|banamex|bbva|santander/i;
+const RUIDO = new RegExp([
+  'total', 'subtotal', 'iva', '\\b[it1l][o0u]a\\s?1?\\d\\s?%', 'venta', 'cambio', 'efectivo', 'tarjeta', 'pago', 'articulo', 'gracias', 'rfc',
+  'ticket', 'folio', 'caja', 'fecha', 'cuenta', 'autoriza', 'comentar', 'precios', 'prosa', 'visa', 'master', 'banamex', 'bbva', 'santander',
+  'ahorr', 'rebajad', 'promocion', 'factur', 'solicite', 'cajero', 'atendio', 'supermercados', 'sucursal',
+].join('|'), 'i');
 
 export function analizarTexto(texto: string, ix: Indice | Producto[]): RenglonTicket[] {
   const indice = Array.isArray(ix) ? construirIndice(ix, []) : ix;
@@ -141,7 +177,8 @@ export function analizarTexto(texto: string, ix: Indice | Producto[]): RenglonTi
       const col = extraerColumnas(l);
       return { texto: l, productoId: id, precio: col?.total ?? extraerPrecio(l), unidades: col?.unidades ?? 1, confianza };
     })
-    .filter((r) => r.productoId || r.precio != null);
+    // Sin producto, solo se pregunta al usuario si el renglón tiene precio y alguna palabra (no "$43.10" suelto).
+    .filter((r) => r.productoId || (r.precio != null && palabras(r.texto).length > 0));
 }
 
 /** Total impreso en el ticket ("TOTAL", "***Venta Total"), sin confundir con subtotal. */
